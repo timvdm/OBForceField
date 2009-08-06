@@ -1,0 +1,28 @@
+#
+# MMFF94 paremeter files
+#
+
+# atom properties
+prop	/home/timvdm/OBForceField/git_repo/data/mmffprop.par
+# fallback defs
+def	/home/timvdm/OBForceField/git_repo/data/mmffdef.par
+# bond stretching parameters
+bond	/home/timvdm/OBForceField/git_repo/data/mmffbond.par
+# angle bending parameters
+ang	/home/timvdm/OBForceField/git_repo/data/mmffang.par
+# empirical rule parameters (bond stretching)
+bndk	/home/timvdm/OBForceField/git_repo/data/mmffbndk.par
+# charge parameters
+chg	/home/timvdm/OBForceField/git_repo/data/mmffchg.par
+# empirical rule parameters (bend-stretch)
+dfsb	/home/timvdm/OBForceField/git_repo/data/mmffdfsb.par
+# out-of-plane parameters
+oop	/home/timvdm/OBForceField/git_repo/data/mmffoop.par
+# partial bond charge increments
+pbci	/home/timvdm/OBForceField/git_repo/data/mmffpbci.par
+# strech-bend parameters
+stbn	/home/timvdm/OBForceField/git_repo/data/mmffstbn.par
+# torsion parameters
+tor	/home/timvdm/OBForceField/git_repo/data/mmfftor.par
+# van der waals parameters
+vdw	/home/timvdm/OBForceField/git_repo/data/mmffvdw.par
