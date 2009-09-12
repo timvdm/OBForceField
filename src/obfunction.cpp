@@ -65,11 +65,131 @@ namespace OBFFs {
     if (term)
       m_terms.push_back(term);
   }
+  
+  void OBFunction::RemoveAllTerms(bool deleteTerms)
+  {
+    std::vector<OBFunctionTerm*>::iterator term;
+    for (term = m_terms.begin(); term != m_terms.end(); ++term)
+      delete *term;
+    m_terms.clear();
+  }
       
   const std::vector<OBFunctionTerm*>& OBFunction::GetTerms() const
   {
     return m_terms;
   }
+
+  //  
+  //         f(1) - f(0)
+  // f'(0) = -----------      f(1) = f(0+h)
+  //              h
+  //
+  Eigen::Vector3d OBFunction::NumericalDerivative(unsigned int index)
+  {
+    double e_orig, e_plus_delta, delta, dx, dy, dz;
+    delta = 1.0e-5;
+
+    const Eigen::Vector3d va = m_positions.at(index);
+    Compute(OBFunction::Value);
+    e_orig = GetValue();
+    
+    // X direction
+    m_positions[index].x() += delta;
+    Compute(OBFunction::Value);
+    e_plus_delta = GetValue();
+    dx = (e_plus_delta - e_orig) / delta;
+    
+    // Y direction
+    m_positions[index].x() = va.x();
+    m_positions[index].y() += delta;
+    Compute(OBFunction::Value);
+    e_plus_delta = GetValue();
+    dy = (e_plus_delta - e_orig) / delta;
+    
+    // Z direction
+    m_positions[index].y() = va.y();
+    m_positions[index].z() += delta;
+    Compute(OBFunction::Value);
+    e_plus_delta = GetValue();
+    dz = (e_plus_delta - e_orig) / delta;
+
+    // reset coordinates to original
+    m_positions[index].z() = va.z();
+
+    return Eigen::Vector3d(-dx, -dy, -dz);
+  }
+
+  //  
+  //         f(2) - 2f(1) + f(0)
+  // f'(0) = -------------------      f(1) = f(0+h)
+  //                 h^2              f(1) = f(0+2h)
+  //
+  Eigen::Vector3d OBFunction::NumericalSecondDerivative(unsigned int index)
+  {
+    double e_0, e_1, e_2, delta, dx, dy, dz;
+    delta = 1.0e-5;
+
+    const Eigen::Vector3d va = m_positions.at(index);
+
+    // calculate f(0)
+    Compute(OBFunction::Value);
+    e_0 = GetValue();
+    
+    // 
+    // X direction
+    //
+    
+    // calculate f(1)
+    m_positions[index].x() += delta;
+    Compute(OBFunction::Value);
+    e_1 = GetValue();
+
+    // calculate f(2)
+    m_positions[index].x() += delta;
+    Compute(OBFunction::Value);
+    e_2 = GetValue();
+    
+    dx = (e_2 - 2 * e_1 + e_0) / (delta * delta);
+    m_positions[index].x() = va.x();
+    
+    // 
+    // Y direction
+    //
+    
+    // calculate f(1)
+    m_positions[index].y() += delta;
+    Compute(OBFunction::Value);
+    e_1 = GetValue();
+
+    // calculate f(2)
+    m_positions[index].y() += delta;
+    Compute(OBFunction::Value);
+    e_2 = GetValue();
+
+    dy = (e_2 - 2 * e_1 + e_0) / (delta * delta);
+    m_positions[index].y() = va.y();
+
+    // 
+    // Z direction
+    //
+    
+    // calculate f(1)
+    m_positions[index].z() += delta;
+    Compute(OBFunction::Value);
+    e_1 = GetValue();
+
+    // calculate f(2)
+    m_positions[index].z() += delta;
+    Compute(OBFunction::Value);
+    e_2 = GetValue();
+
+    dz = (e_2 - 2 * e_1 + e_0) / (delta * delta);
+    m_positions[index].z() = va.z();
+
+
+    return Eigen::Vector3d(-dx, -dy, -dz);
+  }
+
 
   std::string OBFunction::GetOptions() const
   {

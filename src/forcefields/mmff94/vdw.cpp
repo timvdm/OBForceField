@@ -41,8 +41,6 @@ namespace OBFFs {
    
   void MMFF94VDWTerm::Compute(OBFunction::Computation computation)
   {
-    cout << "MMFF94VDWTerm::Compute" << endl;
-    cout << "m_calcs.size = " << m_calcs.size() << endl;
     m_value = 0.0;
    
     unsigned int idxA, idxB;
@@ -83,26 +81,15 @@ namespace OBFFs {
       }
 
       m_value += e;
-     
-     /* 
-      if (m_log->IsHigh()) {
-        snprintf(_logbuf, BUFF_SIZE, "%2d   %2d     %8.3f  %8.3f  %8.3f  %8.3f\n", 
-                atoi(m_calcs[i].a->GetType()), atoi(m_calcs[i].b->GetType()), 
-                rab, m_calcs[i].R_AB, m_calcs[i].epsilon, e);
-        m_log->Log(_logbuf);
-      }
-      */
-      
     }
-/*
-    if (m_log->IsMedium()) {
-      snprintf(_logbuf, BUFF_SIZE, "     TOTAL VAN DER WAALS ENERGY = %8.5f %s\n", energy, GetUnit().c_str());
-      m_log->Log(_logbuf);
+   
+    OBLogFile *logFile = m_function->GetLogFile();
+    if (logFile->IsMedium()) {
+      std::stringstream ss;
+      ss << "     TOTAL VAN DER WAALS ENERGY = " << m_value << " " << m_function->GetUnit() << std::endl;
+      logFile->Write(ss.str());
     }
-*/
     
-    cout << "E_vdw = " << m_value << endl;
- 
   }
   
   bool MMFF94VDWTerm::Setup(/*const*/ OBMol &mol)

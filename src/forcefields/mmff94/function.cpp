@@ -34,6 +34,7 @@ GNU General Public License for more details.
 #include "oop.h"
 #include "vdw.h"
 #include "electro.h"
+#include "vdw_opencl.h"
 #include "electro_opencl.h"
 
 
@@ -54,6 +55,8 @@ namespace OBFFs {
       bool Setup(/*const*/ OBMol &mol);
       void Compute(Computation computation = Value);
       double GetValue() const;
+      
+      std::string GetUnit() const { return "kcal/mol"; }
       
       std::vector<std::string> GetAtomTypes() const;
       std::vector<double> GetFormalCharges() const;
@@ -79,8 +82,7 @@ namespace OBFFs {
     AddTerm(new MMFF94TorsionTerm(this, m_common));
     AddTerm(new MMFF94OutOfPlaneTerm(this, m_common));
     AddTerm(new MMFF94VDWTerm(this, m_common));
-    //AddTerm(new MMFF94ElectroTerm(this, m_common));
-    AddTerm(new MMFF94ElectroTermOpenCL(this, m_common));
+    AddTerm(new MMFF94ElectroTerm(this, m_common));
   }
 
   bool MMFF94Function::Setup(/*const*/ OBMol &mol)
@@ -101,6 +103,10 @@ namespace OBFFs {
 
   void MMFF94Function::Compute(Computation computation)
   {
+    if (computation == OBFunction::Gradients)
+      for (unsigned int idx = 0; idx < m_gradients.size(); ++idx)
+        m_gradients[idx] = Eigen::Vector3d::Zero();
+
     std::vector<OBFunctionTerm*>::iterator term;
     for (term = m_terms.begin(); term != m_terms.end(); ++term)
       (*term)->Compute(computation);
@@ -124,14 +130,22 @@ namespace OBFFs {
     ss << "# parameters = mmff94 | mmff94s" << std::endl;
     ss << "parameters = mmff94" << std::endl;
     ss << std::endl;
-    ss << "##############################" << std::endl;
-    ss << "# Van der Waals Interactions #" << std::endl;
-    ss << "##############################" << std::endl;
+    ss << "################" << std::endl;
+    ss << "# Bonded Terms #" << std::endl;
+    ss << "################" << std::endl;
     ss << std::endl;
-    ss << "# vdwterm = allpair | rvdw | opencl" << std::endl;
+    ss << "# By default, all bonded terms are enabled." << std::endl;
+    ss << "# bonded = [bond] [angle] [strbnd] [torsion] [oop] | none" << std::endl;
+    ss << "bonded = bond angle strbnd torsion oop" << std::endl;
+    ss << std::endl;
+    ss << "######################" << std::endl;
+    ss << "# Van der Waals Term #" << std::endl;
+    ss << "######################" << std::endl;
+    ss << std::endl;
+    ss << "# vdwterm = allpair | rvdw | opencl | none" << std::endl;
     ss << "vdwterm = allpair" << std::endl;
     ss << std::endl;
-    ss << "# vdwterm = <double>" << std::endl;
+    ss << "# rvdw = <double>" << std::endl;
     ss << "rvdw = 8.0" << std::endl;
     ss << std::endl;
     return ss.str();
@@ -139,20 +153,131 @@ namespace OBFFs {
      
   void MMFF94Function::ProcessOptions(std::vector<Option> &options)
   {
-    enum VdwTerm {
-      AllPair,
-      RVdW,
-      OpenCL
+    enum BondedTerm {
+      BondedBond    = (1<<0),
+      BondedAngle   = (1<<1),
+      BondedStrBnd  = (1<<2),
+      BondedTorsion = (1<<3),
+      BondedOOP     = (1<<4),
     };
-    int vdwterm = AllPair;
+    int bondedterm = BondedBond | BondedAngle | BondedStrBnd | BondedTorsion | BondedOOP;
 
+    enum VdwTerm {
+      VdwAllPair,
+      VdwCutOff,
+      VdwOpenCL,
+      VdwNone
+    };
+    int vdwterm = VdwAllPair;
+
+    enum ElectroTerm {
+      ElectroAllPair,
+      ElectroCutOff,
+      ElectroOpenCL,
+      ElectroNone
+    };
+    int electroterm = ElectroAllPair;
+
+    OBLogFile *logFile = GetLogFile();
+    logFile->Write("Processing MMFF94 options...\n");
+ 
     std::vector<Option>::iterator option;
     for (option = options.begin(); option != options.end(); ++option) {
-      if ((*option).name == "vdwterm") {
-        if ((*option).value == "allpair")
-          vdwterm = AllPair;
-        
+
+      if ((*option).name == "bonded") {
+        bondedterm = 0;
+        if ((*option).value.find("bond") != std::string::npos) {
+          logFile->Write("  Enabling bond stretching term...\n");
+          bondedterm |= BondedBond;        
+        }
+        if ((*option).value.find("angle") != std::string::npos) {
+          logFile->Write("  Enabling angle bending term...\n");
+          bondedterm |= BondedAngle; 
+        }
+        if ((*option).value.find("strbnd") != std::string::npos) {
+          logFile->Write("  Enabling stretch bending term...\n");
+          bondedterm |= BondedStrBnd; 
+        }
+        if ((*option).value.find("torsion") != std::string::npos) {
+          logFile->Write("  Enabling torsion term...\n");
+          bondedterm |= BondedTorsion; 
+        }
+        if ((*option).value.find("oop") != std::string::npos) {
+          logFile->Write("  Enabling out of plane term...\n");
+          bondedterm |= BondedOOP; 
+        }
+ 
       }
+
+      if ((*option).name == "vdwterm") {
+        if ((*option).value == "allpair") {
+          vdwterm = VdwAllPair;
+          logFile->Write("  Using all-pairs Van der Waals term\n");
+        } else if ((*option).value == "rvdw") {
+          vdwterm = VdwCutOff;
+          logFile->Write("  Using cut-off Van der Waals term\n");
+        } else if ((*option).value == "opencl") {
+          vdwterm = VdwOpenCL;
+          logFile->Write("  Using OpenCL Van der Waals term\n");
+        } else if ((*option).value == "none") {
+          vdwterm = VdwNone;
+          logFile->Write("  Van der Waals term set to none\n");
+        } else {
+          std::stringstream ss;
+          ss << "Invalid value for option: " << (*option).name << " = " << (*option).value << std::endl;
+          logFile->Write(ss.str());
+        }
+      }
+
+      if ((*option).name == "electroterm") {
+        if ((*option).value == "allpair")
+          electroterm = ElectroAllPair;
+        if ((*option).value == "rele")
+          electroterm = ElectroCutOff;
+        if ((*option).value == "opencl")
+          electroterm = ElectroOpenCL;
+        if ((*option).value == "none")
+          electroterm = ElectroNone;        
+      }
+ 
+    }
+
+    // remove previous terms
+    RemoveAllTerms();
+    // add new bonded terms
+    if (bondedterm & BondedBond)
+      AddTerm(new MMFF94BondTerm(this, m_common));
+    if (bondedterm & BondedAngle)
+      AddTerm(new MMFF94AngleTerm(this, m_common));
+    if (bondedterm & BondedStrBnd)
+      AddTerm(new MMFF94StrBndTerm(this, m_common));
+    if (bondedterm & BondedTorsion)
+      AddTerm(new MMFF94TorsionTerm(this, m_common));
+    if (bondedterm & BondedOOP)
+      AddTerm(new MMFF94OutOfPlaneTerm(this, m_common));
+    // van der waals term
+    switch (vdwterm) {
+      case VdwNone:
+        break;
+      case VdwOpenCL:
+        AddTerm(new MMFF94VDWTermOpenCL(this, m_common));
+        break;
+      case VdwAllPair:
+      default:
+        AddTerm(new MMFF94VDWTerm(this, m_common));
+        break;
+    }
+    // electrostatic term
+    switch (electroterm) {
+      case VdwNone:
+        break;
+      case ElectroOpenCL:
+        AddTerm(new MMFF94ElectroTermOpenCL(this, m_common));
+        break;
+      case VdwAllPair:
+      default:
+        AddTerm(new MMFF94ElectroTerm(this, m_common));
+        break;
     }
   }
  

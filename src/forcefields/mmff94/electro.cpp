@@ -41,8 +41,6 @@ namespace OBFFs {
    
   void MMFF94ElectroTerm::Compute(OBFunction::Computation computation)
   {
-    cout << "MMFF94ElectroTerm::Compute" << endl;
-    cout << "m_calcs.size = " << m_calcs.size() << endl;
     m_value = 0.0;
  
     unsigned int idxA, idxB;
@@ -80,14 +78,13 @@ namespace OBFFs {
       }
       */
     }
-    /*
-    if (m_log->IsMedium()) {
-      snprintf(_logbuf, BUFF_SIZE, "     TOTAL ELECTROSTATIC ENERGY = %8.5f %s\n", energy, GetUnit().c_str());
-      m_log->Log(_logbuf);
+
+    OBLogFile *logFile = m_function->GetLogFile();
+    if (logFile->IsMedium()) {
+      std::stringstream ss;
+      ss << "     TOTAL ELECTROSTATIC ENERGY = " << m_value << " " << m_function->GetUnit() << std::endl;
+      logFile->Write(ss.str());
     }
-    */
- 
-    cout << "E_ele = " << m_value << endl;
  
   }
   

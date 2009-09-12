@@ -10,11 +10,16 @@ namespace OBFFs {
 
   class MMFF94Common;
 
-  class MMFF94ElectroTermOpenCL : public OBFunctionTerm
+  class MMFF94VDWTermOpenCL : public OBFunctionTerm
   {
     public:
-      MMFF94ElectroTermOpenCL(OBFunction *function, MMFF94Common *common);
-      std::string GetName() const { return "MMFF94 electrostatic term (OpenCL)"; }
+      struct Calculation {
+        cl_float x, y, z;
+        cl_float R_AA, sqrt_alpha_N, alpha_G, DA;
+        cl_float padding;
+      };
+      MMFF94VDWTermOpenCL(OBFunction *function, MMFF94Common *common);
+      std::string GetName() const { return "MMFF94 Van der Waals term (OpenCL)"; }
       bool Setup(/*const*/ OBMol &molecule);
       void Compute(OBFunction::Computation computation = OBFunction::Value);
       double GetValue() const { return m_value; }
@@ -29,7 +34,8 @@ namespace OBFFs {
       unsigned int m_numAtoms;
 
       std::vector<std::pair<unsigned int, unsigned int> > m_selfPairs;
-      std::vector<std::pair<unsigned int, unsigned int> > m_oneFourPairs;
+
+      std::vector<Calculation> m_calcs;
 
       // OpenCL
       cl::Context m_context;

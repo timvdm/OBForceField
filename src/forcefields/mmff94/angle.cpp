@@ -54,8 +54,6 @@ namespace OBFFs {
   //    
   void MMFF94AngleTerm::Compute(OBFunction::Computation computation)
   {
-    cout << "MMFF94AngleTerm::Compute" << endl;
-    cout << "m_calcs.size = " << m_calcs.size() << endl;
     m_value = 0.0;
    
     unsigned int idxA, idxB, idxC;

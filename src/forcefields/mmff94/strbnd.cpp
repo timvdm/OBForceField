@@ -113,7 +113,7 @@ namespace OBFFs {
 */
     }
 	
-    cout << "E{strbnd} = " << m_value << endl;
+    //cout << "E{strbnd} = " << m_value << endl;
   }
   
   bool MMFF94StrBndTerm::Setup(/*const*/ OBMol &mol)

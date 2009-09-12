@@ -73,6 +73,14 @@ namespace OBFFs {
        * Call Compute() before GetValue().
        */
       virtual double GetValue() const = 0;
+      /**
+       * Get the used unit (e.g. "kJ/mol", "kcal/mol") for this function.
+       */
+      virtual std::string GetUnit() const = 0;
+      /**
+       * Get the number of particles
+       */
+      unsigned int NumParticles() const { return m_positions.size(); }
       /** 
        * Get the atom positions.
        */
@@ -104,6 +112,10 @@ namespace OBFFs {
        */
       void AddTerm(OBFunctionTerm *term);
       /**
+       * Remove all terms from this function. The term instances are deleted.
+       */ 
+      void RemoveAllTerms(bool deleteTerms = true);
+      /**
        * Get all terms (i.e. pointers to OBFunctionTerm objects) for this function.
        */
       const std::vector<OBFunctionTerm*>& GetTerms() const;
@@ -111,6 +123,18 @@ namespace OBFFs {
       std::string GetOptions() const;
       void SetOptions(const std::string &options);
     
+      /*! Calculate the potential energy function derivative numerically with 
+       *  repect to the coordinates of atom with index a (this vector is the gradient)
+       *
+       * \param a  provides coordinates
+       * \param terms OBFF_ENERGY, OBFF_EBOND, OBFF_EANGLE, OBFF_ESTRBND, OBFF_ETORSION, 
+       * OBFF_EOOP, OBFF_EVDW, OBFF_ELECTROSTATIC
+       * \return the negative gradient of atom a
+       */
+      Eigen::Vector3d NumericalDerivative(unsigned int index);
+      //! OB 3.0
+      Eigen::Vector3d NumericalSecondDerivative(unsigned int index);
+ 
     protected:
       struct Option {
         Option(int _line, const std::string &_name, const std::string &_value) 

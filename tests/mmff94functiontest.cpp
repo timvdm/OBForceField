@@ -50,7 +50,7 @@ int main()
   cout << mmff94_function->GetOptions() << endl;
  
   std::stringstream ss;
-  ss << "mmff_vdw = allpair";
+  ss << "vdwterm = allpair";
   mmff94_function->SetOptions(ss.str());
 
 

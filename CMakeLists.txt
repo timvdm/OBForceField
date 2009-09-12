@@ -47,6 +47,7 @@ set(obforcefields_srcs
     src/forcefields/mmff94/vdw.cpp
     src/forcefields/mmff94/electro.cpp
     
+    src/forcefields/mmff94/vdw_opencl.cpp
     src/forcefields/mmff94/electro_opencl.cpp
 )
 
@@ -58,6 +59,7 @@ target_link_libraries(obforcefields
 
 
 add_subdirectory(tests)
+add_subdirectory(tools)
 
 ########################################
 #  Qt4

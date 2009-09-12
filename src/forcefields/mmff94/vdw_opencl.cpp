@@ -16,7 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 ***********************************************************************/
 
-#include "electro_opencl.h"
+#include "vdw_opencl.h"
 #include "parameter.h"
 #include "common.h"
 
@@ -31,42 +31,38 @@ namespace OpenBabel {
 namespace OBFFs {
  
   struct Parameter {
-    enum { Class, TypeA, TypeB, TypeC, Ka, Theta0 };
+    enum { Type, Alpha_i, N_i, A_i, G_i, DA };
   };
  
-  MMFF94ElectroTermOpenCL::MMFF94ElectroTermOpenCL(OBFunction *function, MMFF94Common *common) : OBFunctionTerm(function), m_common(common)
+  MMFF94VDWTermOpenCL::MMFF94VDWTermOpenCL(OBFunction *function, MMFF94Common *common) : OBFunctionTerm(function), m_common(common)
   {
     m_value = 999999.99;
   }
    
-  void MMFF94ElectroTermOpenCL::Compute(OBFunction::Computation computation)
+  void MMFF94VDWTermOpenCL::Compute(OBFunction::Computation computation)
   {
-    //cout << "MMFF94ElectroTermOpenCL::Compute" << endl;
+    //cout << "MMFF94VDWTermOpenCL::Compute" << endl;
     m_value = 0.0;
       
-
-    const std::vector<double> &charges = m_common->m_pCharges;
     // setup input (posistions + charges) to copy to device
     cl_float hostData[4*m_numAtoms];
     for (int i = 0; i < m_numAtoms; ++i) {
-      int offset = 4 * i;
       const Eigen::Vector3d &atomPos = m_function->GetPositions().at(i);
-      hostData[offset  ] = atomPos.x();
-      hostData[offset+1] = atomPos.y();
-      hostData[offset+2] = atomPos.z();
-      hostData[offset+3] = charges.at(i);
+      m_calcs[i].x = atomPos.x();
+      m_calcs[i].y = atomPos.y();
+      m_calcs[i].z = atomPos.z();
     }
 
-    int p = 256;
+    int p = 64;
     int globalWorkSize = m_numAtoms + p - m_numAtoms % p;
  
     try {
       // write positions (xyz) and charges (w) to device
-      m_queue.enqueueWriteBuffer(m_devPos, CL_TRUE, 0, 4 * m_numAtoms * sizeof(cl_float), (void*)hostData);
+      m_queue.enqueueWriteBuffer(m_devPos, CL_TRUE, 0, 8 * m_numAtoms * sizeof(cl_float), (void*)&m_calcs[0]);
 
       // execute kernel
       cl::KernelFunctor func = m_kernel.bind(m_queue, cl::NDRange(m_numAtoms), cl::NullRange);
-      cl::LocalSpaceArg sharedPos = cl::__local(4 * p * sizeof(cl_float));
+      cl::LocalSpaceArg sharedPos = cl::__local(8 * p * sizeof(cl_float));
       func(m_devPos, m_devGrad, m_numAtoms, sharedPos);
 
       // read back gradients (xyz) and energies (w) from device
@@ -90,33 +86,30 @@ namespace OBFFs {
 
     // compute the self energy (i.e. i == j, bonded atoms, 1-3 (angle terminal atoms) and the 1-4 atoms contribution times 0.25
     double selfEnergy;
-    if (computation == OBFunction::Gradients)
-      selfEnergy = ComputeSelfGradients();
-    else
+   // if (computation == OBFunction::Gradients)
+   //   selfEnergy = ComputeSelfGradients();
+   // else
       selfEnergy = ComputeSelfEnergy();
 
-    m_value = 0.5 * 332.0716 * (devEnergy - selfEnergy);
+    m_value = devEnergy - selfEnergy;
 
-    OBLogFile *logFile = m_function->GetLogFile();
-    if (logFile->IsMedium()) {
-      std::stringstream ss;
-      ss << "     TOTAL ELECTROSTATIC ENERGY = " << m_value << " " << m_function->GetUnit() << std::endl;
-      logFile->Write(ss.str());
-    }
- 
-    //cout << "E_ele = " << m_value << endl;
+    //cout << "E_VDW_dev = " << devEnergy << endl;
+    //cout << "E_VDW_self = " << selfEnergy << endl;
+  //  cout << "E_VDW = " << m_value << endl;
   }
 
-  void MMFF94ElectroTermOpenCL::InitSelfPairs(OBMol &mol)
+  void MMFF94VDWTermOpenCL::InitSelfPairs(OBMol &mol)
   {
     unsigned int numAtoms = mol.NumAtoms();
 
     for (unsigned int i = 0; i < numAtoms; ++i) {
       for (unsigned int j = 0; j < numAtoms; ++j) {
+        /*
         if (i == j) {
           m_selfPairs.push_back(std::pair<unsigned int, unsigned int>(i, j));
           continue;
         }
+        */
 
         OBAtom *a = mol.GetAtom(i+1);
         OBAtom *b = mol.GetAtom(j+1);
@@ -125,70 +118,107 @@ namespace OBFFs {
           m_selfPairs.push_back(std::pair<unsigned int, unsigned int>(i, j));
         else if (a->IsOneThree(b))
           m_selfPairs.push_back(std::pair<unsigned int, unsigned int>(i, j));
-        else if (a->IsOneFour(b) )
-          m_oneFourPairs.push_back(std::pair<unsigned int, unsigned int>(i, j));
       }
     }
   }
 
-  double electroEnergy(const Eigen::Vector3d &ai, const Eigen::Vector3d &aj, double qi, double qj)
+  double vdwEnergy(const MMFF94VDWTermOpenCL::Calculation &ai, const MMFF94VDWTermOpenCL::Calculation &aj)
   {
-    Eigen::Vector3d r = ai - aj;
-    double dist = r.norm() + 0.05;
-    double e = qi * qj / dist;
+    Eigen::Vector3d r(ai.x - aj.x, ai.y - aj.y, ai.z - aj.z);
+    double rab = r.norm();
+
+    double R_AB, R_AB7, epsilon;
+    if (ai.DA == 1) { // hydrogen bond donor
+      R_AB = 0.5 * (ai.R_AA + aj.R_AA);
+      double R_AB2 = R_AB * R_AB;
+      double R_AB4 = R_AB2 * R_AB2;
+      double R_AB6 = R_AB4 * R_AB2;
+
+      if (aj.DA == 2) { // hydrogen bond acceptor
+        epsilon = 0.5 * (181.16 * ai.alpha_G * aj.alpha_G) / (ai.sqrt_alpha_N + aj.sqrt_alpha_N) * (1.0 / R_AB6);
+        // R_AB is scaled to 0.8 for D-A interactions. The value used in the calculation of epsilon is not scaled. 
+        R_AB *= 0.8;
+      } else
+        epsilon = (181.16 * ai.alpha_G * aj.alpha_G) / (ai.sqrt_alpha_N + aj.sqrt_alpha_N) * (1.0 / R_AB6);
+
+      R_AB2 = R_AB * R_AB;
+      R_AB4 = R_AB2 * R_AB2;
+      R_AB6 = R_AB4 * R_AB2;
+      R_AB7 = R_AB6 * R_AB;
+    } else if (aj.DA == 1) { // hydrogen bond donor
+      R_AB = 0.5 * (ai.R_AA + aj.R_AA);
+      double R_AB2 = R_AB * R_AB;
+      double R_AB4 = R_AB2 * R_AB2;
+      double R_AB6 = R_AB4 * R_AB2;
+
+      if (ai.DA == 2) { // hydrogen bond acceptor
+        epsilon = 0.5 * (181.16 * ai.alpha_G * aj.alpha_G) / (ai.sqrt_alpha_N + aj.sqrt_alpha_N) * (1.0 / R_AB6);
+        // R_AB is scaled to 0.8 for D-A interactions. The value used in the calculation of epsilon is not scaled. 
+        R_AB *= 0.8;
+      } else
+        epsilon = (181.16 * ai.alpha_G * aj.alpha_G) / (ai.sqrt_alpha_N + aj.sqrt_alpha_N) * (1.0 / R_AB6);
+
+      R_AB2 = R_AB * R_AB;
+      R_AB4 = R_AB2 * R_AB2;
+      R_AB6 = R_AB4 * R_AB2;
+      R_AB7 = R_AB6 * R_AB;
+    } else {
+      double g_AB = (ai.R_AA - aj.R_AA) / (ai.R_AA + aj.R_AA);
+      double g_AB2 = g_AB * g_AB;
+      R_AB =  0.5 * (ai.R_AA + aj.R_AA) * (1.0 + 0.2 * (1.0 - exp(-12.0 * g_AB2)));
+      double R_AB2 = R_AB * R_AB;
+      double R_AB4 = R_AB2 * R_AB2;
+      double R_AB6 = R_AB4 * R_AB2;
+      R_AB7 = R_AB6 * R_AB;
+      epsilon = (181.16 * ai.alpha_G * aj.alpha_G) / (ai.sqrt_alpha_N + aj.sqrt_alpha_N) * (1.0 / R_AB6);
+    }
+    
+    //cout << "R_AB = " << R_AB << endl;
+
+    const double rab7 = rab*rab*rab*rab*rab*rab*rab;
+    double erep = (1.07 * R_AB) / (rab + 0.07 * R_AB); //***
+    double erep7 = erep*erep*erep*erep*erep*erep*erep;
+    double eattr = (((1.12 * R_AB7) / (rab7 + 0.12 * R_AB7)) - 2.0);
+
+    //cout << "epsilon = " << epsilon << endl;
+    //cout << "erep7 = " << erep7 << endl;
+    //cout << "eattr = " << eattr << endl;
+
+
+    double e = 0.5 * epsilon * erep7 * eattr;
+
+    return e;
   }
 
-  double MMFF94ElectroTermOpenCL::ComputeTotalEnergy()
+  double MMFF94VDWTermOpenCL::ComputeTotalEnergy()
   {
-    const std::vector<double> &charges = m_common->m_pCharges;
-    int numAtoms = charges.size();
-
     double E = 0.0;
-    for (int i = 0; i < numAtoms; ++i) {
-      for (int j = 0; j < numAtoms; ++j) {
-        const Eigen::Vector3d &ai = m_function->GetPositions().at(i);
-        const Eigen::Vector3d &aj = m_function->GetPositions().at(j);
-        E += electroEnergy(ai, aj, charges.at(i), charges.at(j));
+    for (int i = 0; i < m_numAtoms; ++i) {
+      for (int j = 0; j < m_numAtoms; ++j) {
+        E += vdwEnergy(m_calcs.at(i), m_calcs.at(j));
       }
     }
 
     return E;  
   }
 
-  double MMFF94ElectroTermOpenCL::ComputeSelfEnergy()
+  double MMFF94VDWTermOpenCL::ComputeSelfEnergy()
   {
-    const std::vector<double> &charges = m_common->m_pCharges;
-    int numAtoms = charges.size();
-
     double E = 0.0;
     for (unsigned int k = 0; k < m_selfPairs.size(); ++k) {
       unsigned int i = m_selfPairs.at(k).first;
       unsigned int j = m_selfPairs.at(k).second;
-      const Eigen::Vector3d &ai = m_function->GetPositions().at(i);
-      const Eigen::Vector3d &aj = m_function->GetPositions().at(j);
-          
-      E += electroEnergy(ai, aj, charges.at(i), charges.at(j));
-    }
-
-    for (unsigned int k = 0; k < m_oneFourPairs.size(); ++k) {
-      unsigned int i = m_oneFourPairs.at(k).first;
-      unsigned int j = m_oneFourPairs.at(k).second;
-      const Eigen::Vector3d &ai = m_function->GetPositions().at(i);
-      const Eigen::Vector3d &aj = m_function->GetPositions().at(j);
-          
-      E += 0.25 * electroEnergy(ai, aj, charges.at(i), charges.at(j));
+      E += vdwEnergy(m_calcs.at(i), m_calcs.at(j));
     }
 
     //cout << "E_self = " << E << endl;
     return E;  
   }
 
-  double MMFF94ElectroTermOpenCL::ComputeSelfGradients()
+  double MMFF94VDWTermOpenCL::ComputeSelfGradients()
   {
-    const std::vector<double> &charges = m_common->m_pCharges;
-    int numAtoms = charges.size();
-
     double E = 0.0;
+    /*
     for (unsigned int k = 0; k < m_selfPairs.size(); ++k) {
       unsigned int i = m_selfPairs.at(k).first;
       unsigned int j = m_selfPairs.at(k).second;
@@ -209,47 +239,55 @@ namespace OBFFs {
 
       E += e;
     }
-
-    for (unsigned int k = 0; k < m_oneFourPairs.size(); ++k) {
-      unsigned int i = m_oneFourPairs.at(k).first;
-      unsigned int j = m_oneFourPairs.at(k).second;
-      const Eigen::Vector3d &ai = m_function->GetPositions().at(i);
-      const Eigen::Vector3d &aj = m_function->GetPositions().at(j);
-
-      Eigen::Vector3d r = ai - aj;
-      double dist = r.norm() + 0.05;
-      double dist2 = dist * dist;
-
-      double QiQj = charges.at(i) * charges.at(j);
-
-      double e = QiQj / dist;
-      double dE = - 0.25 * 332.0716 * QiQj / dist2;
-    
-      m_function->GetGradients()[i] += r * dE;
-      m_function->GetGradients()[j] -= r * dE;
-
-      E += 0.25 * e;
-    }
-
+*/
     //cout << "E_self = " << E << endl;
     return E;  
   }
 
 
 
-  bool MMFF94ElectroTermOpenCL::Setup(/*const*/ OBMol &mol)
+  bool MMFF94VDWTermOpenCL::Setup(/*const*/ OBMol &mol)
   {
-    OBAtom *a, *b, *c;
-
     OBLogFile *logFile = m_function->GetLogFile();
     OBParameterDB *database = m_function->GetParameterDB();
 
     if (logFile->IsLow())
-      logFile->Write("SETTING UP ELECTROSTATIC CALCULATIONS...\n");
+      logFile->Write("SETTING UP VAN DER WAALS CALCULATIONS...\n");
     std::stringstream ss;
 
-
     m_numAtoms = mol.NumAtoms();
+    for (unsigned int i = 0; i < m_numAtoms; ++i) {
+      OBAtom *atom = mol.GetAtom(i+1);
+    
+      std::vector<OBParameterDB::Query> query;
+      query.push_back( OBParameterDB::Query(Parameter::Type, OBVariant(m_common->GetCachedType(atom))) );
+      std::vector<OBVariant> row = database->FindRow(MMFF94SimpleParameterDB::VanDerWaalsParameters, query);
+ 
+      if (row.empty()) {
+        if (logFile->IsLow()) {
+          std::stringstream ss;
+          ss << "   COULD NOT FIND VAN DER WAALS PARAMETERS FOR " << m_common->GetCachedType(atom) << " (MMFF94 Atom Type)..." << endl;
+          logFile->Write(ss.str());
+        }
+
+        return false;
+      }
+
+      Calculation calc;
+
+      double alpha = row.at(Parameter::Alpha_i).AsDouble();
+      double Ai = row.at(Parameter::A_i).AsDouble();
+      double Ni = row.at(Parameter::N_i).AsDouble();
+      double Gi = row.at(Parameter::G_i).AsDouble();
+
+      calc.R_AA = Ai * pow(alpha, 0.25);
+      calc.sqrt_alpha_N = sqrt(alpha / Ni);
+      calc.alpha_G = alpha * Gi;
+      calc.DA = row.at(Parameter::DA).AsInt();
+
+      m_calcs.push_back(calc);
+    }
+
     InitSelfPairs(mol);
 
     try {
@@ -276,10 +314,10 @@ namespace OBFFs {
 
       // Open the kernel source file
       std::ifstream ifs;
-      ifs.open("kernel.cl");
+      ifs.open("mmff94vdwkernel.cl");
       if (!ifs) {
         std::stringstream msg;
-        msg << "Cannot open kernel.cl..." << std::endl;
+        msg << "Cannot open mmff94vdwkernel.cl..." << std::endl;
         logFile->Write(msg.str());
         return false;
       }
@@ -298,11 +336,10 @@ namespace OBFFs {
       program.build(devices);
 
       // Create the kernel
-      m_kernel = cl::Kernel(program, "electrostaticKernel");
+      m_kernel = cl::Kernel(program, "vdwKernel");
       m_queue = cl::CommandQueue(m_context, devices[0], 0);
 
-      //m_devPos = cl::Buffer(m_context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 4 * m_numAtoms * sizeof(cl_float), (void*)hostData);
-      m_devPos = cl::Buffer(m_context, CL_MEM_READ_WRITE, 4 * m_numAtoms * sizeof(cl_float));
+      m_devPos = cl::Buffer(m_context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 8 * m_numAtoms * sizeof(cl_float), (void*)&m_calcs[0]);
       m_devGrad = cl::Buffer(m_context, CL_MEM_READ_WRITE, 4 * m_numAtoms * sizeof(cl_float));
 
     } catch (cl::Error err) {

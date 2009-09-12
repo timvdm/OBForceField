@@ -41,8 +41,6 @@ namespace OBFFs {
    
   void MMFF94OutOfPlaneTerm::Compute(OBFunction::Computation computation)
   {
-    cout << "MMFF94OutOfPlaneTerm::Compute" << endl;
-    cout << "m_calcs.size = " << m_calcs.size() << endl;
     m_value = 0.0;
  
     unsigned int idxA, idxB, idxC, idxD;
@@ -100,7 +98,6 @@ namespace OBFFs {
 
     m_value *= 0.043844 * 0.5;
 
-    cout << "E_oop = " << m_value << endl;
   }
   
   bool MMFF94OutOfPlaneTerm::Setup(/*const*/ OBMol &mol)

@@ -1,4 +1,12 @@
 /*
+ * Copyright 2009 Tim Vandermeersch
+ *
+ * MMFF94 electrostatic term.
+ *
+ */
+
+
+/*
  * Copyright 1993-2009 NVIDIA Corporation.  All rights reserved.
  *
  * NOTICE TO USER:   
@@ -35,6 +43,8 @@
 
 #define BLOCKDIM 256
 
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+
 // Macros to simplify shared memory addressing
 #define SX(i) sharedPos[i+ get_local_size(0)*get_local_id(1)]
 // This macro is only used the multithreadBodies (MT) versions of kernel code below
@@ -57,37 +67,28 @@ float4 interaction(float4 Fi, float4 ai, float4 aj)
     r.z = ai.z - aj.z;
     r.w = 0;
 
-    // distSqr = dot(r_ij, r_ij) + EPS^2  [6 FLOPS]
+    // distSqr = dot(r_ij, r_ij) + 0.05^2  [6 FLOPS]
     float distSqr = r.x * r.x + r.y * r.y + r.z * r.z;
-    distSqr += 0.0025;
+    float dist = sqrt(distSqr) + 0.05;
+    float invDist = 1.0 / dist;
 
-    // invDistCube =1/distSqr^(3/2)  [4 FLOPS (2 mul, 1 sqrt, 1 inv)]
-    float invDist = rsqrt(distSqr);
+    float QiQj = ai.w * aj.w;
+    float dE = - 332.0716 * QiQj * invDist * invDist * invDist;
 
-    //float distSixth = distSqr * distSqr * distSqr;
-    //float invDistCube = 1.0f / sqrt(distSixth);
-    
     // s = m_j * invDistCube [1 FLOP]
-    float e = 0.5 * 332.0716 * ai.w * aj.w * invDist;
+    float e = QiQj * invDist; // * 0.5 * 332.0716 done in host code
 
     // a_i =  a_i + s * r_ij [6 FLOPS]
-    Fi.x += r.x * e;
-    Fi.y += r.y * e;
-    Fi.z += r.z * e;
+    Fi.x += dE * r.x;
+    Fi.y += dE * r.y;
+    Fi.z += dE * r.z;
     Fi.w += e;
 
     return Fi;
 }
 
-// This is the "tile_calculation" function from the GPUG3 article.
-float4 gravitation(float4 myPos, float4 accel, __local float4 sharedPos[])
+float4 computeTile(float4 myPos, float4 accel, __local float4 sharedPos[])
 {
-    
-    // The CUDA 1.1 compiler cannot determine that i is not going to 
-    // overflow in the loop below.  Therefore if int is used on 64-bit linux 
-    // or windows (or long instead of long long on win64), the compiler
-    // generates suboptimal code.  Therefore we use long long on win64 and
-    // long on everything else. (Workaround for Bug ID 347697)
 #ifdef _Win64
     unsigned long long i = 0;
 #else
@@ -96,14 +97,7 @@ float4 gravitation(float4 myPos, float4 accel, __local float4 sharedPos[])
 
     // Here we unroll the loop
 
-    // Note that having an unsigned int loop counter and an unsigned
-    // long index helps the compiler generate efficient code on 64-bit
-    // OSes.  The compiler can't assume the 64-bit index won't overflow
-    // so it incurs extra integer operations.  This is a standard issue
-    // in porting 32-bit code to 64-bit OSes.
-
-    for (unsigned int counter = 0; counter < get_local_size(0); ) 
-    {
+    for (unsigned int counter = 0; counter < get_local_size(0); ) {
         accel = interaction(accel, SX(i++), myPos); 
 	counter++;
     }
@@ -140,12 +134,8 @@ float4 computeAtomForce(float4 bodyPos, __global float4* positions, int numBodie
       positions[WRAP(blockIdxx + q * tile + threadIdxy, gridDimx) * p
       + threadIdxx];
 
-    // __syncthreads();
     barrier(CLK_LOCAL_MEM_FENCE);
-    // This is the "tile_calculation" function from the GPUG3 article.
-    force = gravitation(bodyPos, force, sharedPos);
-
-    // __syncthreads();
+    force = computeTile(bodyPos, force, sharedPos);
     barrier(CLK_LOCAL_MEM_FENCE);
   }
   // When the numBodies / thread block size is < # multiprocessors (16 on G80), the GPU is 
@@ -163,7 +153,7 @@ float4 computeAtomForce(float4 bodyPos, __global float4* positions, int numBodie
   SX_SUM(threadIdxx, threadIdxy).x = force.x;
   SX_SUM(threadIdxx, threadIdxy).y = force.y;
   SX_SUM(threadIdxx, threadIdxy).z = force.z;
-  SX_SUM(threadIdxx, threadIdxy).w = force.w;
+  //SX_SUM(threadIdxx, threadIdxy).w = force.w;
 
 
   barrier(CLK_LOCAL_MEM_FENCE);//__syncthreads();
@@ -176,7 +166,7 @@ float4 computeAtomForce(float4 bodyPos, __global float4* positions, int numBodie
       force.x += SX_SUM(get_local_id(0),i).x;
       force.y += SX_SUM(get_local_id(0),i).y;
       force.z += SX_SUM(get_local_id(0),i).z;
-      force.w += SX_SUM(get_local_id(0),i).w;
+//      force.w += SX_SUM(get_local_id(0),i).w;
     }
   }
 
@@ -204,4 +194,3 @@ __kernel void electrostaticKernel(
 
     gradients[index] = force;
 }
-
