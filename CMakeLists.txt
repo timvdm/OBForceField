@@ -47,7 +47,7 @@ set(obforcefields_srcs
     src/forcefields/mmff94/electro.cpp
 )
 
-if (OPENCL_FOUND)
+if (OPENCL_FOUND EQUAL True)
   add_definitions(-DOPENCL_FOUND)
   link_directories(${OPENCL_LIBRARY_DIR})
   

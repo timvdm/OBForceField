@@ -262,7 +262,9 @@ namespace OBFFs {
       case VdwNone:
         break;
       case VdwOpenCL:
+#ifdef OPENCL_FOUND
         AddTerm(new MMFF94VDWTermOpenCL(this, m_common));
+#endif
         break;
       case VdwAllPair:
       default:
@@ -274,7 +276,9 @@ namespace OBFFs {
       case VdwNone:
         break;
       case ElectroOpenCL:
+#ifdef OPENCL_FOUND
         AddTerm(new MMFF94ElectroTermOpenCL(this, m_common));
+#endif
         break;
       case VdwAllPair:
       default:
