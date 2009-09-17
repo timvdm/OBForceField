@@ -46,10 +46,16 @@ set(obforcefields_srcs
     src/forcefields/mmff94/oop.cpp
     src/forcefields/mmff94/vdw.cpp
     src/forcefields/mmff94/electro.cpp
-    
+)
+
+if (OPENCL_FOUND)
+  set(obforcefields_srcs
+    ${obforcefields_srcs}
     src/forcefields/mmff94/vdw_opencl.cpp
     src/forcefields/mmff94/electro_opencl.cpp
-)
+  )
+endif (OPENCL_FOUND)
+
 
 add_library(obforcefields SHARED ${obforcefields_srcs})
 target_link_libraries(obforcefields 
