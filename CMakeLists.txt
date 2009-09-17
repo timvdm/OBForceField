@@ -8,8 +8,7 @@ set(CMAKE_MODULE_PATH ${OBForceFields_SOURCE_DIR}/cmake/modules)
 find_package(OpenBabel2 REQUIRED) # find and setup OpenBabel
 find_package(Eigen2 REQUIRED) # find and setup Eigen2
 
-find_package(OpenCL REQUIRED)
-link_directories(${OPENCL_LIBRARY_DIR})
+find_package(OpenCL) # optional
 
 
 # QtCore for QtConcurrent
@@ -49,6 +48,9 @@ set(obforcefields_srcs
 )
 
 if (OPENCL_FOUND)
+  add_definitions(-DOPENCL_FOUND)
+  link_directories(${OPENCL_LIBRARY_DIR})
+  
   set(obforcefields_srcs
     ${obforcefields_srcs}
     src/forcefields/mmff94/vdw_opencl.cpp

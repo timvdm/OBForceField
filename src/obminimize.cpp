@@ -21,6 +21,10 @@ GNU General Public License for more details.
 #include <OBMinimize>
 #include <openbabel/obutil.h>
 
+#ifdef __MINGW32__
+#include <cstdio> // FIXME replace snprinf with std::stringstream
+#endif
+
 using namespace std;
 using namespace OpenBabel::OBFFs;
 

@@ -34,9 +34,11 @@ GNU General Public License for more details.
 #include "oop.h"
 #include "vdw.h"
 #include "electro.h"
+
+#ifdef OPENCL_FOUND
 #include "vdw_opencl.h"
 #include "electro_opencl.h"
-
+#endif
 
 namespace OpenBabel {
 namespace OBFFs {
