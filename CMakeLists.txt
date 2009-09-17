@@ -56,7 +56,9 @@ if (OPENCL_FOUND EQUAL True)
     src/forcefields/mmff94/vdw_opencl.cpp
     src/forcefields/mmff94/electro_opencl.cpp
   )
-endif (OPENCL_FOUND)
+else (OPENCL_FOUND EQUAL True)
+  set(OPENCL_LIBRARIES "")
+endif (OPENCL_FOUND EQUAL True)
 
 
 add_library(obforcefields SHARED ${obforcefields_srcs})
