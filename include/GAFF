@@ -1,0 +1,8 @@
+#include "../src/forcefields/gaff/gaffparameter.h"
+#include "../src/forcefields/gaff/gafftype.h"
+#include "../src/forceterms/bond.h"
+#include "../src/forceterms/angle.h"
+#include "../src/forceterms/torsion.h"
+#include "../src/forceterms/LJ6_12.h"
+#include "../src/forceterms/Coulomb.h"
+#include "../src/chargemethods/obgasteiger.h"
