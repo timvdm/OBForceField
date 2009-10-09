@@ -3,26 +3,26 @@
 #
 
 # atom properties
-prop	/home/timvdm/OBForceField/git_repo/data/mmffprop.par
+prop	../data/mmffprop.par
 # fallback defs
-def	/home/timvdm/OBForceField/git_repo/data/mmffdef.par
+def	../data/mmffdef.par
 # bond stretching parameters
-bond	/home/timvdm/OBForceField/git_repo/data/mmffbond.par
+bond	../data/mmffbond.par
 # angle bending parameters
-ang	/home/timvdm/OBForceField/git_repo/data/mmffang.par
+ang	../data/mmffang.par
 # empirical rule parameters (bond stretching)
-bndk	/home/timvdm/OBForceField/git_repo/data/mmffbndk.par
+bndk	../data/mmffbndk.par
 # charge parameters
-chg	/home/timvdm/OBForceField/git_repo/data/mmffchg.par
+chg	../data/mmffchg.par
 # empirical rule parameters (bend-stretch)
-dfsb	/home/timvdm/OBForceField/git_repo/data/mmffdfsb.par
+dfsb	../data/mmffdfsb.par
 # out-of-plane parameters
-oop	/home/timvdm/OBForceField/git_repo/data/mmffoop.par
+oop	../data/mmffoop.par
 # partial bond charge increments
-pbci	/home/timvdm/OBForceField/git_repo/data/mmffpbci.par
+pbci	../data/mmffpbci.par
 # strech-bend parameters
-stbn	/home/timvdm/OBForceField/git_repo/data/mmffstbn.par
+stbn	../data/mmffstbn.par
 # torsion parameters
-tor	/home/timvdm/OBForceField/git_repo/data/mmfftor.par
+tor	../data/mmfftor.par
 # van der waals parameters
-vdw	/home/timvdm/OBForceField/git_repo/data/mmffvdw.par
+vdw	../data/mmffvdw.par
