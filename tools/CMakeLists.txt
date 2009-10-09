@@ -21,6 +21,7 @@ link_directories(
 set(tools
     energy
     minimize
+    minimize_gaff
 )
 
 foreach (tool ${tools})

@@ -1,5 +1,6 @@
 #include <OBVariant>
 #include <sstream>
+#include <stdlib.h>
 
 namespace OpenBabel {
 namespace OBFFs {
@@ -9,27 +10,38 @@ namespace OBFFs {
   {
     switch (m_type) {
       case Int:
-        return m_int;
+        return ( static_cast< holder<int> *>(p_value) -> m_value) ;
       case Double:
-        return m_double;
+        return ( static_cast< holder<double> * >(p_value) -> m_value) ;
       case Bool:
-        return m_bool;
+        return ( static_cast< holder<bool> * >(p_value) -> m_value) ;
     }
   }
 
   int OBVariant::AsInt() const
   {
-    return AsT<int>();
+    if (m_type==String)
+      return  atoi((static_cast< holder<std::string> * >(p_value) -> m_value).c_str()) ;
+    else
+      return AsT<int>();
   }
 
   double OBVariant::AsDouble() const
   {
-    return AsT<double>();
+    if (m_type==String)
+      return  strtod((static_cast< holder<std::string> * >(p_value) -> m_value).c_str(),0) ;
+    else
+      return AsT<double>();
   }
 
   bool OBVariant::AsBool() const
   {
-    return AsT<bool>();
+    if (m_type==String){
+      std::string s(static_cast< holder<std::string> * >(p_value) -> m_value);
+      return (s=="true"||s=="True"||s=="1"||s=="t") ;
+    }
+    else
+      return AsT<bool>();
   }
 
   std::string OBVariant::AsString() const
@@ -37,39 +49,41 @@ namespace OBFFs {
     std::stringstream ss;
     switch (m_type) {
       case Int:
-        ss << m_int;
+        ss << ( static_cast< holder<int> * >(p_value) -> m_value);
         break;
       case Double:
-        ss << m_double;
+        ss << ( static_cast< holder<double> * >(p_value) -> m_value);
         break;
       case Bool:
-        if (m_bool == true)
+        if ( static_cast< holder<bool> * >(p_value) -> m_value == true)
           ss << "True";
         else 
           ss << "False";
         break;
+      case String:
+          ss << ( static_cast< holder<std::string> * >(p_value) -> m_value);
+        break;
     }
-
     return ss.str();
   }
       
-  bool OBVariant::operator==(const OBVariant &other)
+  bool OBVariant::operator==(const OBVariant &other) const
   {
     if (m_type != other.m_type)
       return false;
     switch (m_type) {
       case Int:
-        return (m_int == other.m_int);
+        return (static_cast< holder<int> * >(p_value) -> m_value ==  static_cast< holder<int> * >(other.p_value) -> m_value);
       case Double:
-        return (m_double == other.m_double);
+        return (static_cast< holder<double> * >(p_value) -> m_value ==  static_cast< holder<double> * >(other.p_value) -> m_value);
       case Bool:
-        return (m_bool == other.m_bool);
-      default:
-        return false;  
+        return (static_cast< holder<bool> * >(p_value) -> m_value ==  static_cast< holder<bool> * >(other.p_value) -> m_value);
+      case String:
+        return (static_cast< holder<std::string> * >(p_value) -> m_value ==  static_cast< holder<std::string> * >(other.p_value) -> m_value);
     }
   }
   
-  bool OBVariant::operator!=(const OBVariant &other)
+  bool OBVariant::operator!=(const OBVariant &other) const
   {
     return !(*this == other);
   }

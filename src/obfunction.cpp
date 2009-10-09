@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include <OBLogFile>
 
 #include <openbabel/mol.h>
+#include <openbabel/atom.h>
 #include <iostream>
 #include <iterator>
 using namespace std;
@@ -52,12 +53,34 @@ namespace OBFFs {
 
     std::vector<OBFunctionTerm*>::iterator term;
     for (term = m_terms.begin(); term != m_terms.end(); ++term)
-      (*term)->Setup(mol);
+      (*term)->Setup();
+  }
+
+  bool OBFunction::CopyPositionsToMol(OBMol& mol) const
+  {
+    if (mol.NumAtoms() != m_positions.size())
+      return false;
+    std::vector<OBAtom*>::iterator itr;
+    std::vector<Eigen::Vector3d>::const_iterator itr2;
+    OBAtom *atom;
+    for (atom = mol.BeginAtom(itr), itr2=m_positions.begin(); atom; atom = mol.NextAtom(itr), ++itr2)
+      atom->SetVector(const_cast<double *>(itr2->data()));
+    return true;
   }
 
   void OBFunction::SetParameterDB(OBParameterDB *db) 
   { 
     m_parameterDB = db; 
+  }
+
+  void OBFunction::SetOBFFType(OBFFType *obffType) 
+  { 
+    m_obffType = obffType; 
+  }
+
+  void OBFunction::SetOBChargeMethod(OBChargeMethod *obChargeMethod) 
+  { 
+    m_obChargeMethod = obChargeMethod; 
   }
 
   void OBFunction::AddTerm(OBFunctionTerm *term)

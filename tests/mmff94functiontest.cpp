@@ -25,11 +25,11 @@ int main()
 
   OBMol mol;
   OBConversion conv;
-  conv.SetInFormat("sdf");
+  conv.SetInFormat("mol");
 
   std::ifstream ifs;
   //ifs.open("hexane.xyz");
-  ifs.open("aceton.sdf");
+  ifs.open("acetone.mol");
   conv.Read(&mol, &ifs);
   ifs.close();
 
@@ -42,7 +42,7 @@ int main()
 
   cout << "E{bond} = " << mmff94_function->GetValue() << endl;
   
-  //  MMFF94SimpleParameterDB *database = new MMFF94SimpleParameterDB("/home/timvdm/OBForceField/laptop/data/mmff94.ff");
+  //  MMFF94SimpleParameterDB *database = new MMFF94SimpleParameterDB("../data/mmff94.ff");
 
   
 

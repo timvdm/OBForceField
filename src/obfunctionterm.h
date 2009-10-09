@@ -32,7 +32,7 @@ namespace OBFFs {
       /**
        * Setup this term
        */
-      virtual bool Setup(/*const*/ OBMol &mol) = 0;
+      virtual bool Setup() = 0;
       /**
        * Compute the value or gradients for this term.
        */

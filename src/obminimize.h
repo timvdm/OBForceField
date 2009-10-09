@@ -31,6 +31,8 @@ GNU General Public License for more details.
 #define BUFF_SIZE 32768
 #endif
 
+#undef OBAPI
+#define OBAPI
 
 namespace OpenBabel {
 namespace OBFFs {

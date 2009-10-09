@@ -31,4 +31,11 @@ int main()
   OBVariant var4(0, "myvar");
   OB_ASSERT( var4.AsBool() == false );
 
+  OBVariant var5("3.678", "myvar");
+  OB_ASSERT( var5.GetName() == "myvar" );
+  OB_ASSERT( var5.AsInt() == 3 );
+  OB_ASSERT( var5.AsDouble() == 3.678 );
+  OB_ASSERT( var5.AsBool() == false );
+  OB_ASSERT( var5.AsString() == "3.678" );
+
 }
