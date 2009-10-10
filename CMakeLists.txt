@@ -16,6 +16,8 @@ include(${QT_USE_FILE})
 
 enable_testing()
 
+add_definitions(-DDATADIR="${CMAKE_SOURCE_DIR}/data/")
+
 include_directories(
     ${OBForceFields_SOURCE_DIR}/include
     ${OPENBABEL2_INCLUDE_DIR}
