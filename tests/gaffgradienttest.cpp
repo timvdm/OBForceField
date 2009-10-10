@@ -184,11 +184,16 @@ int main()
 
   OBMol mol;
   OBConversion conv;
-  conv.SetInFormat("mol");
+  conv.SetInFormat("pdb");
 
   std::ifstream ifs;
   //ifs.open("hexane.xyz");
-  ifs.open("acetone.pdb");
+  string filename = string(TESTDATADIR) + string("aceton.pdb");
+  ifs.open(filename.c_str());
+  if (!ifs) {
+    cout << "could not open aceton.pdb" << endl;
+    return -1;
+  }
   conv.Read(&mol, &ifs);
   ifs.close();
 
