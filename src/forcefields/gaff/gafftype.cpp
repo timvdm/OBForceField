@@ -596,6 +596,7 @@ namespace OpenBabel {
       return m_atoms[idx-1];
     }
 
+    /*
     const vector<OBFFType::AtomIdentifier> & GAFFType::GetAtoms() const
     {
       return m_atoms;
@@ -620,6 +621,7 @@ namespace OpenBabel {
     {
       return m_oops;
     }
+    */
 
     vector<string> GAFFType::MakeAlternativeAtomNames(string aName)
     {

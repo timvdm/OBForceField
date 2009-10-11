@@ -43,11 +43,11 @@ namespace OpenBabel {
       unsigned int Idx(const size_t & i) const {return m_isIdxTrivial ? (unsigned int) i + i : m_IToIdx.at(i);}
       size_t I(const unsigned int & idx) const {return m_isIdxTrivial ? (size_t) idx - 1 : m_IdxToI.find(idx)->second;}
       const std::string & GetAtomType(const size_t & idx) const;
-      const std::vector<AtomIdentifier> & GetAtoms() const;
-      const std::vector<BondIdentifier> & GetBonds() const;
-      const std::vector<AngleIdentifier> & GetAngles() const;
-      const std::vector<TorsionIdentifier> & GetTorsions() const;
-      const std::vector<OOPIdentifier> & GetOOPs() const;
+      //const std::vector<AtomIdentifier> & GetAtoms() const;
+      //const std::vector<BondIdentifier> & GetBonds() const;
+      //const std::vector<AngleIdentifier> & GetAngles() const;
+      //const std::vector<TorsionIdentifier> & GetTorsions() const;
+      //const std::vector<OOPIdentifier> & GetOOPs() const;
       bool IsConnected(const size_t & idxA, const size_t & idxB) const;
       bool IsOneThree(const size_t & idxA, const size_t & idxB) const;
       bool IsOneFour(const size_t & idxA, const size_t & idxB) const;
@@ -65,11 +65,13 @@ namespace OpenBabel {
       GAFFTypeRules * p_typerules;
       unsigned int m_numAtoms;
       bool m_isIdxTrivial;
+      /* now defined in OBFFType
       std::vector<AtomIdentifier> m_atoms;
       std::vector<BondIdentifier> m_bonds;
       std::vector<AngleIdentifier> m_angles;
       std::vector<TorsionIdentifier> m_torsions;
       std::vector<OOPIdentifier> m_oops;
+      */
       std::vector<double> m_masses;
       std::vector<double> m_charges;
       std::set<unsigned long int> m_Connected;
