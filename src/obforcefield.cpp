@@ -83,7 +83,6 @@ GNU General Public License for more details.
 #include <openbabel/rotamer.h>
 #include <openbabel/rotor.h>
 
-#include <OBCutOffGrid>
 #include <OBMinimize>
 #include <OBVectorMath>
 
