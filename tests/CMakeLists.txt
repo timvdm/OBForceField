@@ -28,6 +28,7 @@ link_directories(
 set(tests
 #  forcefield
   variant
+  nbrlist
   gaffparameterdb
   gaffgradient
   gafffunction

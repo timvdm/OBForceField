@@ -37,6 +37,7 @@ set(obforcefields_srcs
     src/vectormath.cpp
     src/obchargemethod.cpp
     src/obffparameterdb.cpp
+    src/obnbrlist.cpp
 
     src/forceterms/bond.cpp
     src/forceterms/angle.cpp
