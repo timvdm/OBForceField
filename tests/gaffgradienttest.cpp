@@ -1,6 +1,7 @@
 #include <OBFunction>
 #include <OBLogFile>
 #include "obtest.h"
+#include <GAFF>
 
 #include <openbabel/mol.h>
 #include <openbabel/obconversion.h>
@@ -168,51 +169,54 @@ bool ValidateGradients(OBFunction *function)
 
 int main()
 {
-  OBFunctionFactory *mmff94_factory = OBFunctionFactory::GetFactory("MMFF94");
-  OB_ASSERT( mmff94_factory != 0);
+  OBFunctionFactory *gaff_factory = OBFunctionFactory::GetFactory("GAFF");
+  OB_ASSERT( gaff_factory != 0);
+  OBFunction *gaff_function = gaff_factory->NewInstance();
+  OB_ASSERT( gaff_function != 0);
 
-  OBFunction *mmff94_function = mmff94_factory->NewInstance();
-  OB_ASSERT( mmff94_function != 0);
+//   GAFFParameterDB gaff_parameterDB("../data/gaff.dat");
+//   GAFFTypeRules gaff_typerules("../data/gaff.prm");
+//   GAFFType gaff_type(& gaff_typerules);
+//   OBGasteiger chargeMethod;
+//   gaff_function->SetParameterDB(& gaff_parameterDB);
+//   gaff_function->SetOBFFType(& gaff_type);
+//   gaff_function->SetOBChargeMethod(& chargeMethod);
 
   OBMol mol;
   OBConversion conv;
-  conv.SetInFormat("sdf");
+  conv.SetInFormat("mol");
 
   std::ifstream ifs;
   //ifs.open("hexane.xyz");
-  ifs.open("aceton.sdf");
+  ifs.open("acetone.pdb");
   conv.Read(&mol, &ifs);
   ifs.close();
 
   cout << "num atoms = " << mol.NumAtoms() << endl;
 
-  mmff94_function->GetLogFile()->SetOutputStream(&std::cout);
-  mmff94_function->GetLogFile()->SetLogLevel(OBLogFile::Low);
-
-
+  gaff_function->GetLogFile()->SetOutputStream(&std::cout);
+  gaff_function->GetLogFile()->SetLogLevel(OBLogFile::Medium);
 
   std::stringstream options;
-  options << "bonded = none" << std::endl;
-  //options << "vdwterm = none" << std::endl;
-  options << "vdwterm = opencl" << std::endl;
-  options << "electroterm = none" << std::endl;
-  //options << "electroterm = opencl" << std::endl;
+  options << "bonded = all" << std::endl;
+  //   options << "bonded = bond" << std::endl;
+  //   options << "bonded = angle" << std::endl;
+  //   options << "bonded = torsion" << std::endl;
+  //   options << "bonded = oop" << std::endl;
+  //  options << "bonded = none" << std::endl;
+  options << "vdwterm = allpair" << std::endl;
+  //  options << "vdwterm = none" << std::endl;
+  options << "electroterm = allpair" << std::endl;
+  //options << "electroterm = none" << std::endl;
 
-  mmff94_function->SetOptions(options.str());
-  mmff94_function->Setup(mol);
-
-
-
-  ValidateGradients(mmff94_function);
-/*
+  gaff_function->SetOptions(options.str());
   
+  gaff_function->Setup(mol);
 
-  cout << "Options:" << endl;
-  cout << mmff94_function->GetOptions() << endl;
- 
-  std::stringstream ss;
-  ss << "mmff_vdw = allpair";
-  mmff94_function->SetOptions(ss.str());
+  ValidateGradients(gaff_function);
 
-*/
+  gaff_function->Compute();
+  cout << "energy: " << gaff_function->GetValue() << endl;
+
+
 }

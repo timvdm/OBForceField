@@ -22,6 +22,9 @@ GNU General Public License for more details.
 #include <openbabel/babelconfig.h>
 #include <string>
 
+#undef OBAPI
+#define OBAPI
+
 namespace OpenBabel {
 namespace OBFFs {
 

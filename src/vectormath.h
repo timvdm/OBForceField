@@ -41,6 +41,9 @@ GNU General Public License for more details.
 #define DEG_TO_RAD (M_PI/180.0)
 #endif
 
+#undef OBAPI
+#define OBAPI
+
 namespace OpenBabel {
 namespace OBFFs {
 

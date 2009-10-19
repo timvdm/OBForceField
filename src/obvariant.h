@@ -2,6 +2,7 @@
   OBVariant - Class to store variables (i.e. bool, int, double)
 
   Copyright (C) 2009 Tim Vandermeersch
+  Some contributions copyright (C) 2009 Frank Peters 
 
   This file is part of the OpenBabel project.
   For more information, see <http://openbabel.openmolecules.net/>
@@ -26,46 +27,92 @@
 #define OBFFS_VARIANT_H
 
 #include <string>
+#include <typeinfo>
+#include <iostream>
 
 namespace OpenBabel {
-namespace OBFFs {
-
-  class OBVariant
-  {
+  namespace OBFFs {
+    
+    class OBVariant
+    {
     public:
-      enum Type {Int, Double, Bool};
+      enum Type {Int, Double, Bool, String};
+    
+      OBVariant(const int &value, const std::string &name = std::string()) 
+	: m_name(name), p_value(new holder<int>(value)), m_type(Int) {}
+      OBVariant(const double &value, const std::string &name = std::string()) 
+	: m_name(name), p_value(new holder<double>(value)), m_type(Double) {}
+      OBVariant(const bool &value, const std::string &name = std::string()) 
+	: m_name(name), p_value(new holder<bool>(value)), m_type(Bool) {}
+      OBVariant(const std::string &value, const std::string &name = std::string()) 
+	: m_name(name), p_value(new holder<std::string>(value)), m_type(String) {}
+      OBVariant(const char * value, const std::string &name = std::string()) 
+	: m_name(name), p_value(new holder<std::string>(value)), m_type(String) {}
 
-      OBVariant(int value, const std::string &name = std::string()) 
-        : m_name(name), m_int(value), m_type(Int) {}
-      OBVariant(double value, const std::string &name = std::string()) 
-        : m_name(name), m_double(value), m_type(Double) {}
-      OBVariant(bool value, const std::string &name = std::string()) 
-        : m_name(name), m_bool(value), m_type(Bool) {}
+      OBVariant(const OBVariant& rhs)
+	: m_name(rhs.m_name), m_type(rhs.m_type), p_value(rhs.p_value) {
+	++(p_value->references);
+      }
+
+      OBVariant & operator= (const OBVariant& rhs){
+	if (this == &rhs)
+	  return *this;
+	else {
+	  if (--(p_value->references)==0) { 
+	    delete p_value;
+	  }
+	  m_name = rhs.m_name; 
+	  m_type = rhs.m_type;
+	  p_value = rhs.p_value;
+	  ++(p_value->references);
+	  return *this;
+	}
+      }
       
-      const std::string& GetName() const { return m_name; }
-      const Type GetType() const { return m_type; }
-      
+      ~OBVariant() 
+      {
+	if (--(p_value->references)==0) { 
+	  delete p_value;
+	}
+      }
+
+      const std::string& GetName() const { return m_name;}
+      Type GetType() const { return m_type;}
+    
       int AsInt() const;
       double AsDouble() const;
       bool AsBool() const;
       std::string AsString() const;
+    
+      bool operator==(const OBVariant &other) const;
+      bool operator!=(const OBVariant &other) const;
+    
+      class placeholder 
+      { 
+      public:
+	placeholder() : references(1) {}
+	virtual ~placeholder() {} 
+	unsigned int references;
+      };
 
-      bool operator==(const OBVariant &other);
-      bool operator!=(const OBVariant &other);
+      template<typename ValueType>
+      class holder : public placeholder
+      {
+      public:
+	holder(const ValueType & value)
+	  : m_value(value) {}
+	ValueType m_value;
+      };
 
     private:
-      template<typename T> T AsT() const;
- 
+      template<typename T>
+      T AsT() const;
       std::string m_name;
       Type m_type;
-      union {
-        int    m_int;
-        double m_double;
-        bool   m_bool;
-      };
-  };
-
-} // OBFFs
+      placeholder * p_value;
+    };
+    
+  } // OBFFs
 } // OpenBabel
 
 #endif

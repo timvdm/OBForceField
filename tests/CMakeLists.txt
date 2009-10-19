@@ -25,9 +25,9 @@ link_directories(
 set(tests
 #  forcefield
   variant
-  gradient
-  mmff94parameterdb
-  mmff94function
+  gaffparameterdb
+  gaffgradient
+  gafffunction
 )
 
 foreach (test ${tests})

@@ -2,6 +2,7 @@
 forcefield.h - Handle OBForceField class.
  
 Copyright (C) 2006-2007 by Tim Vandermeersch <tim.vandermeersch@gmail.com>
+Some contributions Copyright (C) 2009 by Frank Peters <e.a.j.f.peters@gmail.com>
  
 This file is part of the Open Babel project.
 For more information, see <http://openbabel.sourceforge.net/>
@@ -47,15 +48,15 @@ namespace OBFFs {
     /** 
      * @brief Get the force field atom types. 
      */
-    virtual std::vector<std::string> GetAtomTypes() const = 0;
-    /** 
-     * @brief Get the force field formal charges.
-     */
-    virtual std::vector<double> GetFormalCharges() const = 0;
-    /** 
-     * @brief Get the force field partial charges.
-     */
-    virtual std::vector<double> GetPartialCharges() const = 0;
+    //    virtual std::vector<std::string> GetAtomTypes() const = 0;
+//     /** 
+//      * @brief Get the force field formal charges.
+//      */
+//     virtual std::vector<double> GetFormalCharges() const = 0;
+//     /** 
+//      * @brief Get the force field partial charges.
+//      */
+//     virtual std::vector<double> GetPartialCharges() const = 0;
  
     /////////////////////////////////////////////////////////////////////////
     // Logging                                                             //
@@ -66,19 +67,19 @@ namespace OBFFs {
     /** 
      * @brief Print the atom types to the log.
      */
-    void PrintAtomTypes();
+    //    void PrintAtomTypes();
     /** 
      * @brief Print the formal charges to the log (atom.GetPartialCharge(), 
      *  MMFF94 FC's are not always int).
      */ 
-    void PrintFormalCharges();
-    /** 
-     * @brief Print the partial charges to the log.
-     */ 
-    void PrintPartialCharges();
-    /** 
-     * @brief Print the velocities to the log.
-     */ 
+//     void PrintFormalCharges();
+//     /** 
+//      * @brief Print the partial charges to the log.
+//      */ 
+//     void PrintPartialCharges();
+//     /** 
+//      * @brief Print the velocities to the log.
+//      */ 
     void PrintVelocities();
     //@}
 

@@ -108,56 +108,56 @@ namespace OBFFs {
   //
   //////////////////////////////////////////////////////////////////////////////////
   
-  void OBForceField::PrintAtomTypes()
-  {
-    OBLogFile *logFile = GetLogFile();
-    if (logFile->IsLow()) {
-      logFile->Write("\nA T O M   T Y P E S\n\n");
-      logFile->Write("IDX\tTYPE\n");
+//   void OBForceField::PrintAtomTypes()
+//   {
+//     OBLogFile *logFile = GetLogFile();
+//     if (logFile->IsLow()) {
+//       logFile->Write("\nA T O M   T Y P E S\n\n");
+//       logFile->Write("IDX\tTYPE\n");
       
-      std::stringstream ss;
-      std::vector<std::string> types = GetAtomTypes();
-      for (unsigned int i = 0; i < types.size(); ++i) {
-        ss << i << "\t" << types.at(i) << std::endl;
-        logFile->Write(ss.str());
-        ss.str("");
-      }
-    }
-  }
+//       std::stringstream ss;
+//       std::vector<std::string> types = GetAtomTypes();
+//       for (unsigned int i = 0; i < types.size(); ++i) {
+//         ss << i << "\t" << types.at(i) << std::endl;
+//         logFile->Write(ss.str());
+//         ss.str("");
+//       }
+//     }
+//   }
     
-  void OBForceField::PrintFormalCharges()
-  {
-    OBLogFile *logFile = GetLogFile();
-    if (logFile->IsLow()) {
-      logFile->Write("\nF O R M A L   C H A R G E S\n\n");
-      logFile->Write("IDX\tCHARGE\n");
+//   void OBForceField::PrintFormalCharges()
+//   {
+//     OBLogFile *logFile = GetLogFile();
+//     if (logFile->IsLow()) {
+//       logFile->Write("\nF O R M A L   C H A R G E S\n\n");
+//       logFile->Write("IDX\tCHARGE\n");
  
-      std::stringstream ss;
-      std::vector<double> charges = GetFormalCharges();
-      for (unsigned int i = 0; i < charges.size(); ++i) {
-        ss << i << "\t" << charges.at(i) << std::endl;
-        logFile->Write(ss.str());
-        ss.str("");
-      }
-    }
-  }
+//       std::stringstream ss;
+//       std::vector<double> charges = GetFormalCharges();
+//       for (unsigned int i = 0; i < charges.size(); ++i) {
+//         ss << i << "\t" << charges.at(i) << std::endl;
+//         logFile->Write(ss.str());
+//         ss.str("");
+//       }
+//     }
+//   }
 
-  void OBForceField::PrintPartialCharges()
-  {
-    OBLogFile *logFile = GetLogFile();
-    if (logFile->IsLow()) {
-      logFile->Write("\nP A R T I A L   C H A R G E S\n\n");
-      logFile->Write("IDX\tCHARGE\n");
+//   void OBForceField::PrintPartialCharges()
+//   {
+//     OBLogFile *logFile = GetLogFile();
+//     if (logFile->IsLow()) {
+//       logFile->Write("\nP A R T I A L   C H A R G E S\n\n");
+//       logFile->Write("IDX\tCHARGE\n");
  
-      std::stringstream ss;
-      std::vector<double> charges = GetPartialCharges();
-      for (unsigned int i = 0; i < charges.size(); ++i) {
-        ss << i << "\t" << charges.at(i) << std::endl;
-        logFile->Write(ss.str());
-        ss.str("");
-      }
-    }
-  }
+//       std::stringstream ss;
+//       std::vector<double> charges = GetPartialCharges();
+//       for (unsigned int i = 0; i < charges.size(); ++i) {
+//         ss << i << "\t" << charges.at(i) << std::endl;
+//         logFile->Write(ss.str());
+//         ss.str("");
+//       }
+//     }
+//   }
 
   void OBForceField::ProcessOptions(std::vector<Option> &options)
   {

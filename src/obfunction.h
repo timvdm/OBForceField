@@ -3,6 +3,7 @@ obfunction.h - Base class for force fields and scroring functions which
                depend on atom positions.
  
 Copyright (C) 2008,2009 by Tim Vandermeersch
+Copyright (C) 2009 by Frank Peters (some additions)
  
 This file is part of the Open Babel project.
 For more information, see <http://openbabel.sourceforge.net/>
@@ -32,6 +33,8 @@ namespace OBFFs {
   class OBLogFile;
   class OBFunctionTerm;
   class OBParameterDB;
+  class OBFFType;
+  class OBChargeMethod;
 
   /** @class OBFunction
    *  @brief Base class for functions (e.g. force fields, ...) of 3D variables (e.g. atom coordinates, ...).
@@ -87,6 +90,10 @@ namespace OBFFs {
       std::vector<Eigen::Vector3d>&  GetPositions() { return m_positions; }
       const std::vector<Eigen::Vector3d>&  GetPositions() const { return m_positions; }
       /** 
+       * Copy atom positions to molecule
+       */
+      bool CopyPositionsToMol(OBMol& mol) const;
+      /** 
        * Get the atom gradients.
        */
       std::vector<Eigen::Vector3d>&  GetGradients() { return m_gradients; } 
@@ -107,6 +114,22 @@ namespace OBFFs {
        * Set the OBParamterDB for this function.
        */
       void SetParameterDB(OBParameterDB *database);
+      /**
+       * Get the OBFFType for this function.
+       */
+      OBFFType* GetOBFFType() { return m_obffType; }
+      /**
+       * Set the OBFFType for this function.
+       */
+      void SetOBFFType(OBFFType *obfftype);
+      /**
+       * Get the OBChargeMethod for this function.
+       */
+      OBChargeMethod* GetOBChargeMethod() { return m_obChargeMethod; }
+      /**
+       * Set the OBChargeMethod for this function.
+       */
+      void SetOBChargeMethod(OBChargeMethod *obChargeMethod);
       /**
        * Add a term to this function.
        */
@@ -151,6 +174,8 @@ namespace OBFFs {
 
       OBLogFile *m_logfile;
       OBParameterDB *m_parameterDB;
+      OBFFType *m_obffType;
+      OBChargeMethod *m_obChargeMethod;
       std::string m_options;
       std::vector<OBFunctionTerm*> m_terms;
       std::vector<Eigen::Vector3d> m_positions;

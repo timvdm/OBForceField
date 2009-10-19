@@ -93,11 +93,13 @@ void testAtomProperties(OBParameterDB *database)
   OB_ASSERT( row.at(6).AsInt() == 0 );
   OB_ASSERT( row.at(7).AsInt() == 0 );
   OB_ASSERT( row.at(8).AsInt() == 0 );
+  row = database->GetRow(table, 9);
 
   // try query
   std::vector<OBParameterDB::Query> query;
   query.push_back( OBParameterDB::Query(0, OBVariant(9)) );
   row = database->FindRow(table, query);
+  std::vector<OBVariant> row2 = database->FindRow(table, query);
   OB_ASSERT( row.size() == 9 );
   OB_ASSERT( row.at(0).AsInt() == 9 );
   OB_ASSERT( row.at(1).AsInt() == 7 );
@@ -579,7 +581,7 @@ void testPartialBondChargeIncrements(OBParameterDB *database)
 
 int main()
 {
-  MMFF94SimpleParameterDB *database = new MMFF94SimpleParameterDB("/home/timvdm/OBForceField/laptop/data/mmff94.ff");
+  MMFF94SimpleParameterDB *database = new MMFF94SimpleParameterDB("../data/mmff94.ff");
   testTables(database);
   testAtomProperties(database);
   testAtomTypeLevels(database);
