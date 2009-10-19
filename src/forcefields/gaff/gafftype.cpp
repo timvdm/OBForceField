@@ -575,27 +575,28 @@ namespace OpenBabel {
       return valid;
     }
 
-    bool GAFFType::IsConnected(const unsigned int &idxA, const unsigned int &idxB) const
+    bool GAFFType::IsConnected(const size_t &idxA, const size_t &idxB) const
     {
       return (m_Connected.find((idxA-1)+m_numAtoms*(idxB-1))!=m_Connected.end());
     }
 
-    bool GAFFType::IsOneThree(const unsigned int &idxA, const unsigned int &idxB) const
+    bool GAFFType::IsOneThree(const size_t &idxA, const size_t &idxB) const
     {
       return (m_OneThree.find((idxA-1)+m_numAtoms*(idxB-1))!=m_OneThree.end());
     }
 
-    bool GAFFType::IsOneFour(const unsigned int &idxA, const unsigned int &idxB) const
+    bool GAFFType::IsOneFour(const size_t &idxA, const size_t &idxB) const
     {
       return (m_OneFour.find((idxA-1)+m_numAtoms*(idxB-1))!=m_OneFour.end());
     }
 
 
-    const string & GAFFType::GetAtomType(const unsigned int & idx) const
+    const string & GAFFType::GetAtomType(const size_t & idx) const
     {
       return m_atoms[idx-1];
     }
 
+    /*
     const vector<OBFFType::AtomIdentifier> & GAFFType::GetAtoms() const
     {
       return m_atoms;
@@ -620,6 +621,7 @@ namespace OpenBabel {
     {
       return m_oops;
     }
+    */
 
     vector<string> GAFFType::MakeAlternativeAtomNames(string aName)
     {

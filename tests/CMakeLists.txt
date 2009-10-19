@@ -1,3 +1,6 @@
+# define TESTDATADIR for tests that need input files
+add_definitions(-DTESTDATADIR="${CMAKE_SOURCE_DIR}/tests/")
+
 set(QT_USE_QTOPENGL true)
 
 include(${QT_USE_FILE})
@@ -25,6 +28,7 @@ link_directories(
 set(tests
 #  forcefield
   variant
+  nbrlist
   gaffparameterdb
   gaffgradient
   gafffunction

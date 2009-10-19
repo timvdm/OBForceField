@@ -19,11 +19,10 @@ GNU General Public License for more details.
 #include <OBFFParameterDB>
 
 namespace OpenBabel {
-
-  class OBMol;
-  namespace OBFFs {
-    class GAFFParameterDB : public OBFFParameterDB
-    {
+namespace OBFFs {
+    
+  class GAFFParameterDB : public OBFFParameterDB
+  {
     public:
       GAFFParameterDB(const std::string &filename);      
       bool IsInitialized() const { return _initialized; }
@@ -32,6 +31,7 @@ namespace OpenBabel {
       bool ParseParamFile();
       bool _initialized;      
       std::string _filename;
-    };
-  }
-}
+  };
+  
+} // namespace OBFFs
+} // namespace OpenBabel

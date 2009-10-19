@@ -87,7 +87,8 @@ namespace OpenBabel {
     {
       p_gaffType = (GAFFType *) GetOBFFType();
       if (p_gaffType==NULL){
-	p_gaffTypeRules = new GAFFTypeRules("../data/gaff.prm"); //here should be the default value to gaff.prm 
+        std::string filename = std::string(DATADIR) + "gaff.prm";
+	p_gaffTypeRules = new GAFFTypeRules(filename); //here should be the default value to gaff.prm 
 	if (p_gaffTypeRules==NULL)
 	  return false;
 	else {
@@ -102,7 +103,8 @@ namespace OpenBabel {
 	}
       }
       else if (! (p_gaffType->IsInitialized()) ) {
-	p_gaffTypeRules = new GAFFTypeRules("../data/gaff.prm"); //here should be the default value to gaff.prm 
+        std::string filename = std::string(DATADIR) + "gaff.prm";
+	p_gaffTypeRules = new GAFFTypeRules(filename); //here should be the default value to gaff.prm 
 	if (p_gaffTypeRules==NULL)
 	  return false;
 	else {
@@ -112,7 +114,8 @@ namespace OpenBabel {
       }	
       p_database = (GAFFParameterDB *) GetParameterDB();
       if (p_database==NULL){
-	p_database = new GAFFParameterDB("../data/gaff.dat");;
+        std::string filename = std::string(DATADIR) + "gaff.dat";
+	p_database = new GAFFParameterDB(filename);;
 	if (p_database==NULL)
 	  return false;
 	else {

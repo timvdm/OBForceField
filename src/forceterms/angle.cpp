@@ -35,13 +35,18 @@ namespace OpenBabel {
     const std::string AngleHarmonic::m_name = "Angle Harmonic";
 
     AngleHarmonic::AngleHarmonic(OBFunction *function, std::string tableName)
-      : OBFunctionTerm(function), m_tableName(tableName), m_value(999999.99) {}
+      : OBFunctionTerm(function), m_tableName(tableName), m_i(0), m_calcs(0),
+      m_value(999999.99) 
+    {
+    }
 
 
     AngleHarmonic::~AngleHarmonic()
     {
-      delete [] m_i;
-      delete [] m_calcs;
+      if (m_i)
+        delete [] m_i;
+      if (m_calcs)
+        delete [] m_calcs;
     }
 
     // Conventions taken from Lammps potentials
@@ -109,8 +114,10 @@ namespace OpenBabel {
       if ( (pTable==NULL) || (pOBFFType==NULL) )
 	return false;
       m_numAngles=angles.size();
-      delete [] m_i;
-      delete [] m_calcs;
+      if (m_i)
+        delete [] m_i;
+      if (m_calcs)
+        delete [] m_calcs;
       m_i = new Index [m_numAngles];
       m_calcs = new Parameter [m_numAngles];
       for(unsigned int i=0;i != m_numAngles;++i){

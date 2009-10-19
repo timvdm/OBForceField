@@ -8,11 +8,15 @@ set(CMAKE_MODULE_PATH ${OBForceFields_SOURCE_DIR}/cmake/modules)
 find_package(OpenBabel2 REQUIRED) # find and setup OpenBabel
 find_package(Eigen2 REQUIRED) # find and setup Eigen2
 
+find_package(OpenCL) # optional
+
 # QtCore for QtConcurrent
 find_package(Qt4) # find and setup Qt4 for this project
 include(${QT_USE_FILE})
 
 enable_testing()
+
+add_definitions(-DDATADIR="${CMAKE_SOURCE_DIR}/data/")
 
 include_directories(
     ${OBForceFields_SOURCE_DIR}/include
@@ -33,6 +37,7 @@ set(obforcefields_srcs
     src/vectormath.cpp
     src/obchargemethod.cpp
     src/obffparameterdb.cpp
+    src/obnbrlist.cpp
 
     src/forceterms/bond.cpp
     src/forceterms/angle.cpp
@@ -42,15 +47,40 @@ set(obforcefields_srcs
 
     src/chargemethods/obgasteiger.cpp
 
+#src/forcefields/mmff94/common.cpp
+#   src/forcefields/mmff94/parameter.cpp
+#   src/forcefields/mmff94/function.cpp
+#   src/forcefields/mmff94/bond.cpp
+#   src/forcefields/mmff94/angle.cpp
+#   src/forcefields/mmff94/strbnd.cpp
+#   src/forcefields/mmff94/torsion.cpp
+#   src/forcefields/mmff94/oop.cpp
+#   src/forcefields/mmff94/vdw.cpp
+#   src/forcefields/mmff94/electro.cpp
+
     src/forcefields/gaff/gaffparameter.cpp
     src/forcefields/gaff/gafftype.cpp
     src/forcefields/gaff/gafffunction.cpp
 )
 
+if (OPENCL_FOUND EQUAL True)
+  add_definitions(-DOPENCL_FOUND)
+  link_directories(${OPENCL_LIBRARY_DIR})
+  
+  set(obforcefields_srcs
+    ${obforcefields_srcs}
+    src/forcefields/mmff94/vdw_opencl.cpp
+    src/forcefields/mmff94/electro_opencl.cpp
+  )
+else (OPENCL_FOUND EQUAL True)
+  set(OPENCL_LIBRARIES "")
+endif (OPENCL_FOUND EQUAL True)
+
+
 add_library(obforcefields SHARED ${obforcefields_srcs})
 target_link_libraries(obforcefields 
     ${OPENBABEL2_LIBRARIES}
-#    ${OPENCL_LIBRARIES}
+    ${OPENCL_LIBRARIES}
 )
 
 

@@ -495,7 +495,8 @@ void testTorsionParameters(OBParameterDB *database)
 
 int main()
 {
-  GAFFParameterDB *database = new GAFFParameterDB("d:/eajfpeters/My Documents/code/OBForceField/data/gaff.dat");
+  std::cout << string(TESTDATADIR) + string("../data/gaff.dat") << std::endl;
+  GAFFParameterDB *database = new GAFFParameterDB(string(TESTDATADIR) + string("../data/gaff.dat"));
   testTables(database);
   testAtomProperties(database);
   testBondParameters(database);
