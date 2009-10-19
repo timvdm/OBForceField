@@ -34,23 +34,21 @@ namespace OpenBabel {
     class GAFFType: public OBFFType
     {
     public:
-      GAFFType(GAFFTypeRules * ptyperules=NULL) : p_typerules(ptyperules), m_isIdxTrivial(true) {}
+      GAFFType(GAFFTypeRules * ptyperules=NULL) : p_typerules(ptyperules) {}
       bool IsInitialized();
       GAFFTypeRules * GetGAFFTypeRules() const {return p_typerules;}
       void SetGAFFTypeRules(GAFFTypeRules * ptyperules) {p_typerules=ptyperules;}
       bool SetTypes(const OBMol &mol);
       bool ValidateTypes(GAFFParameterDB * pdatabase); //Check if types are in database. If not check for default patterns. If found change name. If still not found remove interaction from list.
-      unsigned int Idx(const size_t & i) const {return m_isIdxTrivial ? (unsigned int) i + i : m_IToIdx.at(i);}
-      size_t I(const unsigned int & idx) const {return m_isIdxTrivial ? (size_t) idx - 1 : m_IdxToI.find(idx)->second;}
       const std::string & GetAtomType(const size_t & idx) const;
       //const std::vector<AtomIdentifier> & GetAtoms() const;
       //const std::vector<BondIdentifier> & GetBonds() const;
       //const std::vector<AngleIdentifier> & GetAngles() const;
       //const std::vector<TorsionIdentifier> & GetTorsions() const;
       //const std::vector<OOPIdentifier> & GetOOPs() const;
-      bool IsConnected(const size_t & idxA, const size_t & idxB) const;
-      bool IsOneThree(const size_t & idxA, const size_t & idxB) const;
-      bool IsOneFour(const size_t & idxA, const size_t & idxB) const;
+      bool IsConnected(const size_t & iA, const size_t & iB) const;
+      bool IsOneThree(const size_t & iA, const size_t & iB) const;
+      bool IsOneFour(const size_t & iA, const size_t & iB) const;
     protected:
       static std::vector<std::string> MakeAlternativeAtomNames(std::string aName);
       static std::string MakeBondName(std::string aName, std::string bName);
@@ -64,7 +62,6 @@ namespace OpenBabel {
     private:
       GAFFTypeRules * p_typerules;
       unsigned int m_numAtoms;
-      bool m_isIdxTrivial;
       /* now defined in OBFFType
       std::vector<AtomIdentifier> m_atoms;
       std::vector<BondIdentifier> m_bonds;
@@ -77,8 +74,6 @@ namespace OpenBabel {
       std::set<unsigned long int> m_Connected;
       std::set<unsigned long int> m_OneThree;
       std::set<unsigned long int> m_OneFour;
-      std::map<unsigned long int, size_t> m_IdxToI;
-      std::vector<unsigned long int> m_IToIdx;
       friend class GAFFParameterDB;
     };
 

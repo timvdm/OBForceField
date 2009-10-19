@@ -77,23 +77,6 @@ namespace OpenBabel {
 
       m_numAtoms = mol.NumAtoms();
 
-      OBAtom *atom;
-      vector<OBAtom*>::iterator itr;
-      unsigned int idx;
-      size_t i;
-      m_isIdxTrivial = true;
-      for (atom = const_cast<OBMol&>(mol).BeginAtom(itr), i=0; atom; atom = const_cast<OBMol&>(mol).NextAtom(itr), ++i){
-	idx = atom->GetIdx();
-	if (idx!=(unsigned int)i+1)
-	  m_isIdxTrivial = false;
-	m_IdxToI.insert(pair<unsigned int, size_t>(idx,i));
-	m_IToIdx.push_back(idx);
-      }
-      if (m_isIdxTrivial){
-	m_IdxToI.clear();
-	m_IToIdx.clear();
-      }
-
       vector<vector<int> > mlist;
       vector<pair<OBSmartsPattern*,string> >::const_iterator itr1;
       vector<vector<int> >::const_iterator itr2;
@@ -104,7 +87,7 @@ namespace OpenBabel {
 	if (itr1->first->Match(const_cast<OBMol&>(mol))) {
 	  mlist = itr1->first->GetMapList();
 	  for (itr2 = mlist.begin();itr2 != mlist.end();++itr2) {
-	    m_atoms[ I( (*itr2)[0] ) ]=(itr1->second).c_str();
+	    m_atoms[ (*itr2)[0]-1 ]=(itr1->second).c_str();
 	  }
 	}
       }
@@ -119,7 +102,7 @@ namespace OpenBabel {
       OBBitVec visited;
       OBAtom *a, *b;
       unsigned int BO;
-      size_t ia, ib;
+      size_t i, ia, ib;
       visited.Resize(m_numAtoms);
       visited.Clear();
       for (i=0; i!= m_numAtoms; ++i){
@@ -134,8 +117,8 @@ namespace OpenBabel {
 	    FOR_BONDS_OF_ATOM(bond,mol.GetAtom(i+1)) {
 	      a = bond->GetBeginAtom();
 	      b = bond->GetEndAtom();
-	      ia = I( a->GetIdx() );
-	      ib = I( b->GetIdx() );
+	      ia = a->GetIdx()-1;
+	      ib = b->GetIdx()-1;
 	      if (m_atoms[ia]=="cc"||m_atoms[ia]=="cd"&&m_atoms[ib]=="cc"||m_atoms[ib]=="cd"){
 		BO = bond->GetBondOrder();
 		if ( (BO > 1  && m_atoms[ia]==m_atoms[ib]) || (BO==1 && m_atoms[ia]!=m_atoms[ib]) ){
@@ -237,8 +220,8 @@ namespace OpenBabel {
       m_bonds.reserve(mol.NumBonds());
       OBFFType::BondIdentifier bondID;
       FOR_BONDS_OF_MOL(bond,const_cast<OBMol&>(mol)){
-	bondID.iA = I(bond->GetBeginAtom()->GetIdx());
-	bondID.iB = I(bond->GetEndAtom()->GetIdx());
+	bondID.iA = bond->GetBeginAtom()->GetIdx()-1;
+	bondID.iB = bond->GetEndAtom()->GetIdx()-1;
 	bondID.name=MakeBondName(m_atoms[bondID.iA],m_atoms[bondID.iB]);
 	m_bonds.push_back(bondID);
       }
@@ -247,9 +230,9 @@ namespace OpenBabel {
       m_angles.clear();
       OBFFType::AngleIdentifier angleID;
       FOR_ANGLES_OF_MOL(angle,const_cast<OBMol&>(mol)){
-	angleID.iB = I( (*angle)[0]+1 );
-	angleID.iA = I( (*angle)[1]+1 );
-	angleID.iC = I( (*angle)[2]+1 );
+	angleID.iB = (*angle)[0];
+	angleID.iA = (*angle)[1];
+	angleID.iC = (*angle)[2];
 	angleID.name=MakeAngleName(m_atoms[angleID.iA], m_atoms[angleID.iB], m_atoms[angleID.iC]);
 	m_angles.push_back(angleID);
       }
@@ -257,10 +240,10 @@ namespace OpenBabel {
       m_torsions.clear();
       OBFFType::TorsionIdentifier torsionID;
       FOR_TORSIONS_OF_MOL(t,const_cast<OBMol&>(mol)) {
-	torsionID.iA = I( (*t)[0]+1 );
-	torsionID.iB = I( (*t)[1]+1 );
-	torsionID.iC = I( (*t)[2]+1 );
-	torsionID.iD = I( (*t)[3]+1 );
+	torsionID.iA = (*t)[0];
+	torsionID.iB = (*t)[1];
+	torsionID.iC = (*t)[2];
+	torsionID.iD = (*t)[3];
 	torsionID.name=MakeTorsionName(m_atoms[torsionID.iA], m_atoms[torsionID.iB], m_atoms[torsionID.iC], m_atoms[torsionID.iD]);
 	m_torsions.push_back(torsionID);
       }
@@ -269,17 +252,17 @@ namespace OpenBabel {
       OBFFType::OOPIdentifier oopID;
       FOR_ATOMS_OF_MOL(atom, const_cast<OBMol&>(mol)) {
 	b = (OBAtom*) &*atom;
-	oopID.iB = I( b->GetIdx() );
+	oopID.iB = b->GetIdx()-1;
 	for( OBAtomAtomIter nbr1(b); nbr1; ++nbr1 ) {
-	  oopID.iA = I( nbr1 -> GetIdx() );
+	  oopID.iA = nbr1 -> GetIdx()-1;
 	  OBAtomAtomIter nbr2=nbr1;
 	  ++nbr2;
 	  for( ; nbr2; ++nbr2 ) {
-	    oopID.iC = I( nbr2 -> GetIdx() );
+	    oopID.iC = nbr2 -> GetIdx()-1;
 	    OBAtomAtomIter nbr3=nbr2;
 	    ++nbr3;
 	    for( ; nbr3; ++nbr3 ) {
-	      oopID.iD = I( nbr3 -> GetIdx() );
+	      oopID.iD = nbr3 -> GetIdx()-1;
 	      oopID.name=MakeOOPName(m_atoms[oopID.iA], m_atoms[oopID.iB], m_atoms[oopID.iC], m_atoms[oopID.iD]);
 	      m_oops.push_back(oopID);
 	    }
@@ -293,13 +276,13 @@ namespace OpenBabel {
       OBBondIterator itr3, itr4, itr5;
       FOR_ATOMS_OF_MOL(atom, const_cast<OBMol&>(mol)) {
 	a = (OBAtom*) &*atom;
-	ia = I( a->GetIdx() );
+	ia = a->GetIdx()-1;
 	for (bond1 = a->BeginBond(itr3);bond1;bond1 = a->NextBond(itr3)){
 	  if (bond1->GetBeginAtom() == a)
 	    b = bond1->GetEndAtom();
 	  else
 	    b = bond1->GetBeginAtom();
-	  ib = I( b->GetIdx() );
+	  ib = b->GetIdx()-1;
 	  m_Connected.insert(ia+ib*m_numAtoms);
 	  for (bond2 = b->BeginBond(itr4);bond2;bond2 = b->NextBond(itr4)){
 	    if (bond2->GetBeginAtom() == b)
@@ -307,7 +290,7 @@ namespace OpenBabel {
 	    else
 	      c = bond2->GetBeginAtom();
 	    if (c==a) continue;
-	    ic = I( c->GetIdx() );
+	    ic = c->GetIdx()-1;
 	    m_OneThree.insert(ia+ic*m_numAtoms);
 	    for (bond3 = c->BeginBond(itr5);bond3;bond3 = c->NextBond(itr5)){
 	      if (bond3->GetBeginAtom() == c)
@@ -315,7 +298,7 @@ namespace OpenBabel {
 	      else
 		d = bond3->GetBeginAtom();
 	      if (d==b||d==a) continue;
-	      id = I( d->GetIdx() );
+	      id = d->GetIdx()-1;
 	      m_OneFour.insert(ia+id*m_numAtoms);
 	    }
 	  }
@@ -575,19 +558,19 @@ namespace OpenBabel {
       return valid;
     }
 
-    bool GAFFType::IsConnected(const size_t &idxA, const size_t &idxB) const
+    bool GAFFType::IsConnected(const size_t &iA, const size_t &iB) const
     {
-      return (m_Connected.find((idxA-1)+m_numAtoms*(idxB-1))!=m_Connected.end());
+      return (m_Connected.find(iA + m_numAtoms*iB)!=m_Connected.end());
     }
 
-    bool GAFFType::IsOneThree(const size_t &idxA, const size_t &idxB) const
+    bool GAFFType::IsOneThree(const size_t &iA, const size_t &iB) const
     {
-      return (m_OneThree.find((idxA-1)+m_numAtoms*(idxB-1))!=m_OneThree.end());
+      return (m_OneThree.find(iA+m_numAtoms*iB)!=m_OneThree.end());
     }
 
-    bool GAFFType::IsOneFour(const size_t &idxA, const size_t &idxB) const
+    bool GAFFType::IsOneFour(const size_t &iA, const size_t &iB) const
     {
-      return (m_OneFour.find((idxA-1)+m_numAtoms*(idxB-1))!=m_OneFour.end());
+      return (m_OneFour.find(iA+m_numAtoms*iB)!=m_OneFour.end());
     }
 
 

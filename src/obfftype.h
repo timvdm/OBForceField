@@ -74,8 +74,6 @@ namespace OpenBabel {
        */
       virtual bool SetTypes(const OBMol & mol) = 0;
 
-      virtual unsigned int Idx(const size_t & i) const =0;
-      virtual size_t I(const unsigned int & idx) const =0;
       virtual const std::string & GetAtomType(const size_t & i) const =0;
       /**
        * Get the atoms. These are the force field atom types as std::string.
