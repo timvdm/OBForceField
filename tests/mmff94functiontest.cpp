@@ -37,7 +37,10 @@ int main()
 
   mmff94_function->GetLogFile()->SetOutputStream(&std::cout);
 
-  mmff94_function->Setup(mol);
+  if (!mmff94_function->Setup(mol)) {
+    cout << "could not setup..." << endl;
+    return -1;
+  }
   mmff94_function->Compute();
 
   cout << "E{bond} = " << mmff94_function->GetValue() << endl;

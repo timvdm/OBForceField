@@ -32,6 +32,8 @@ set(tests
   gaffparameterdb
   gaffgradient
   gafffunction
+  mmff94parameterdb
+  mmff94function
 )
 
 foreach (test ${tests})

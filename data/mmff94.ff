@@ -3,26 +3,26 @@
 #
 
 # atom properties
-prop	../data/mmffprop.par
+prop	mmffprop.par
 # fallback defs
-def	../data/mmffdef.par
+def	mmffdef.par
 # bond stretching parameters
-bond	../data/mmffbond.par
+bond	mmffbond.par
 # angle bending parameters
-ang	../data/mmffang.par
+ang	mmffang.par
 # empirical rule parameters (bond stretching)
-bndk	../data/mmffbndk.par
+bndk	mmffbndk.par
 # charge parameters
-chg	../data/mmffchg.par
+chg	mmffchg.par
 # empirical rule parameters (bend-stretch)
-dfsb	../data/mmffdfsb.par
+dfsb	mmffdfsb.par
 # out-of-plane parameters
-oop	../data/mmffoop.par
+oop	mmffoop.par
 # partial bond charge increments
-pbci	../data/mmffpbci.par
+pbci	mmffpbci.par
 # strech-bend parameters
-stbn	../data/mmffstbn.par
+stbn	mmffstbn.par
 # torsion parameters
-tor	../data/mmfftor.par
+tor	mmfftor.par
 # van der waals parameters
-vdw	../data/mmffvdw.par
+vdw	mmffvdw.par

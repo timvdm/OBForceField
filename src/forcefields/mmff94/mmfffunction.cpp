@@ -23,9 +23,16 @@ GNU General Public License for more details.
 
 #include <openbabel/mol.h>
 
-#include "common.h"
-#include "parameter.h"
+#include "mmffparameter.h"
+#include "mmfftype.h"
 
+#include "../../forceterms/bondcubicharmonic.h"
+#include "../../forceterms/angle.h"
+#include "../../forceterms/torsion.h"
+#include "../../forceterms/LJ6_12.h"
+#include "../../forceterms/Coulomb.h"
+
+/*
 // terms
 #include "bond.h"
 #include "angle.h"
@@ -39,6 +46,7 @@ GNU General Public License for more details.
 #include "vdw_opencl.h"
 #include "electro_opencl.h"
 #endif
+*/
 
 namespace OpenBabel {
 namespace OBFFs {
@@ -60,7 +68,6 @@ namespace OBFFs {
       
       std::string GetUnit() const { return "kcal/mol"; }
       
-      std::vector<std::string> GetAtomTypes() const;
       std::vector<double> GetFormalCharges() const;
       std::vector<double> GetPartialCharges() const;
  
@@ -71,33 +78,33 @@ namespace OBFFs {
     protected:
       void ProcessOptions(std::vector<Option> &options);
       std::string GetDefaultOptions() const;
-
-      MMFF94Common *m_common;
   };
 
-  MMFF94Function::MMFF94Function() : m_common(new MMFF94Common)
+  MMFF94Function::MMFF94Function()
   {
-    SetParameterDB(m_common->GetParameterDB());
-    AddTerm(new MMFF94BondTerm(this, m_common));
-    AddTerm(new MMFF94AngleTerm(this, m_common));
-    AddTerm(new MMFF94StrBndTerm(this, m_common));
-    AddTerm(new MMFF94TorsionTerm(this, m_common));
-    AddTerm(new MMFF94OutOfPlaneTerm(this, m_common));
-    AddTerm(new MMFF94VDWTerm(this, m_common));
-    AddTerm(new MMFF94ElectroTerm(this, m_common));
+    SetParameterDB(new MMFF94ParameterDB(std::string(DATADIR) + std::string("mmff94.ff")));
+    SetOBFFType(new MMFF94Type);
+    AddTerm(new BondCubicHarmonicTerm(this, 143.9325 / 2.0, -2.0, 7.0 / 3.0, "Bond Parameters", 4, 5));
+    //AddTerm(new MMFF94AngleTerm(this, m_common));
+    //AddTerm(new MMFF94StrBndTerm(this, m_common));
+    //AddTerm(new MMFF94TorsionTerm(this, m_common));
+    //AddTerm(new MMFF94OutOfPlaneTerm(this, m_common));
+    //AddTerm(new MMFF94VDWTerm(this, m_common));
+    //AddTerm(new MMFF94ElectroTerm(this, m_common));
   }
 
   bool MMFF94Function::Setup(/*const*/ OBMol &mol)
   {
-    if (!m_common->SetTypes(mol))
+    MMFF94Type *type = static_cast<MMFF94Type*>(GetOBFFType());
+    if (!type->Setup(mol))
       return false;
 
-    PrintAtomTypes();
+    //type->PrintAtomTypes();
 
-    m_common->SetFormalCharges(mol);
-    PrintFormalCharges();
-    m_common->SetPartialCharges(mol);
-    PrintPartialCharges();
+    type->SetFormalCharges(mol);
+    //type->PrintFormalCharges();
+    type->SetPartialCharges(mol);
+    //type->PrintPartialCharges();
 
     // call setup for all terms
     OBFunction::Setup(mol);
@@ -248,7 +255,8 @@ namespace OBFFs {
     RemoveAllTerms();
     // add new bonded terms
     if (bondedterm & BondedBond)
-      AddTerm(new MMFF94BondTerm(this, m_common));
+      AddTerm(new BondCubicHarmonicTerm(this, 143.9325 / 2.0, -2.0, 7.0 / 3.0, "Bond Parameters", 4, 5));
+    /*
     if (bondedterm & BondedAngle)
       AddTerm(new MMFF94AngleTerm(this, m_common));
     if (bondedterm & BondedStrBnd)
@@ -285,28 +293,20 @@ namespace OBFFs {
         AddTerm(new MMFF94ElectroTerm(this, m_common));
         break;
     }
+    */
   }
  
-  std::vector<std::string> MMFF94Function::GetAtomTypes() const
-  {
-    std::vector<std::string> types;
-    for (unsigned int i = 0; i < m_common->m_types.size(); ++i) {
-      std::stringstream ss;
-      ss << m_common->m_types.at(i);
-      types.push_back(ss.str());
-    }
-    return types;
-  }
-   
+  /*
   std::vector<double> MMFF94Function::GetFormalCharges() const
   {
-    return m_common->m_fCharges;
+    return static_cast<MMFF94Type*>()->m_fCharges;
   }
   
   std::vector<double> MMFF94Function::GetPartialCharges() const
   {
     return m_common->m_pCharges;
   }
+  */
 
   class MMFF94FunctionFactory : public OBFunctionFactory
   {

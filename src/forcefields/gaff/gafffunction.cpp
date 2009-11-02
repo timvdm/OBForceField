@@ -134,7 +134,7 @@ namespace OpenBabel {
 	}
       }
 
-      p_gaffType->SetTypes(mol);
+      p_gaffType->Setup(mol);
       p_gaffType->ValidateTypes(p_database);
       p_charge->ComputeCharges(mol);
 

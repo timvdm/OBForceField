@@ -24,7 +24,6 @@ include_directories(
     ${EIGEN2_INCLUDE_DIR}
     ${QT_INCLUDES}
     ${CMAKE_BINARY_DIR}
-    ${OPENCL_INCLUDE_DIR}
 )
 
 set(obforcefields_srcs
@@ -37,9 +36,11 @@ set(obforcefields_srcs
     src/vectormath.cpp
     src/obchargemethod.cpp
     src/obffparameterdb.cpp
+    src/obfftype.cpp
     src/obnbrlist.cpp
 
     src/forceterms/bond.cpp
+    src/forceterms/bondcubicharmonic.cpp
     src/forceterms/angle.cpp
     src/forceterms/torsion.cpp
     src/forceterms/LJ6_12.cpp
@@ -58,9 +59,15 @@ set(obforcefields_srcs
 #   src/forcefields/mmff94/vdw.cpp
 #   src/forcefields/mmff94/electro.cpp
 
+    # GAFF force field
     src/forcefields/gaff/gaffparameter.cpp
     src/forcefields/gaff/gafftype.cpp
     src/forcefields/gaff/gafffunction.cpp
+
+    # MMFF94 force field
+    src/forcefields/mmff94/mmffparameter.cpp
+    src/forcefields/mmff94/mmfftype.cpp
+    src/forcefields/mmff94/mmfffunction.cpp
 )
 
 if (OPENCL_FOUND EQUAL True)

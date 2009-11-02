@@ -53,7 +53,10 @@ namespace OBFFs {
 
     std::vector<OBFunctionTerm*>::iterator term;
     for (term = m_terms.begin(); term != m_terms.end(); ++term)
-      (*term)->Setup();
+      if (!(*term)->Setup())
+        return false;
+
+    return true;
   }
 
   bool OBFunction::CopyPositionsToMol(OBMol& mol) const
