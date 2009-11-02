@@ -1,7 +1,7 @@
 /*********************************************************************
-MMFF94BondTerm - MMFF94 force field bond stratching term
+Non-bonded Lennard-Jones Term 
 
-Copyright (C) 2006-2008,2009 by Tim Vandermeersch
+Copyright (C) 2009 by Frank Peters
  
 This file is part of the Open Babel project.
 For more information, see <http://openbabel.sourceforge.net/>
@@ -70,7 +70,6 @@ namespace OpenBabel {
       delete [] m_i;
       delete [] m_calcs;
     }
-
 
     // Conventions taken from Lammps potentials
     // E = 4*epsilon*( (sigma/r)^12 - (sigma/r)^6 )

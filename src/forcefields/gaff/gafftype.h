@@ -34,7 +34,7 @@ namespace OpenBabel {
     class GAFFType: public OBFFType
     {
     public:
-      GAFFType(GAFFTypeRules * ptyperules=NULL) : p_typerules(ptyperules)/*, m_isIdxTrivial(true)*/ {}
+      GAFFType(GAFFTypeRules * ptyperules=NULL) : p_typerules(ptyperules) {}
       bool IsInitialized();
       GAFFTypeRules * GetGAFFTypeRules() const {return p_typerules;}
       void SetGAFFTypeRules(GAFFTypeRules * ptyperules) {p_typerules=ptyperules;}
@@ -70,7 +70,6 @@ namespace OpenBabel {
     private:
       GAFFTypeRules * p_typerules;
       unsigned int m_numAtoms;
-      //bool m_isIdxTrivial;
       /* now defined in OBFFType
       std::vector<AtomIdentifier> m_atoms;
       std::vector<BondIdentifier> m_bonds;
@@ -83,8 +82,6 @@ namespace OpenBabel {
       //std::set<unsigned long int> m_Connected;
       //std::set<unsigned long int> m_OneThree;
       //std::set<unsigned long int> m_OneFour;
-      //std::map<unsigned long int, size_t> m_IdxToI;
-      //std::vector<unsigned long int> m_IToIdx;
       friend class GAFFParameterDB;
     };
 
